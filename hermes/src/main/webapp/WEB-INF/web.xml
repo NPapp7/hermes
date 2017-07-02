@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" id="WebApp_ID" version="3.1">
+  <display-name>Hermes</display-name>
+  <description>Web application for instant messaging</description>
+  <servlet>
+    <servlet-name>Faces Servlet</servlet-name>
+    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  
+	<filter>
+	    <filter-name>LoginFilter</filter-name>
+	    <filter-class>com.norbcorp.hungary.hermes.client.filters.LoginFilter</filter-class>
+	</filter>
+	<filter-mapping>
+	    <filter-name>LoginFilter</filter-name>
+	    <url-pattern>/faces/*</url-pattern>
+	</filter-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>Faces Servlet</servlet-name>
+    <url-pattern>*.xhtml</url-pattern>
+  </servlet-mapping>
+  <welcome-file-list>
+  	<welcome-file>faces/login.xhtml</welcome-file>
+  </welcome-file-list>
+  <error-page>
+  	<error-code>500</error-code>
+  	<location>/faces/error.xhtml</location>
+  </error-page>
+</web-app>

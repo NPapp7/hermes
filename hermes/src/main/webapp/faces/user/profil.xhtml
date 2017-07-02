@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:em="http://java.sun.com/jsf/composite/components"
+      xmlns:p="http://primefaces.org/ui"> 
+
+<h:head>
+	<title>${app['profil.title']}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+		<link rel="stylesheet"
+		href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" />
+	<h:outputScript library="js" name="menu.js" />
+	<h:outputStylesheet library="css" name="bootstrap.css"/>
+	<h:outputStylesheet library="css" name="bootstrap-theme.min.css"/>
+	<h:outputStylesheet library="css" name="bbootstrap-theme.css"/>
+</h:head> 
+<h:body> 
+	<h:form>
+		<em:userMenu></em:userMenu>
+	</h:form>
+	<h:messages></h:messages>
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-4">
+				<h:outputText value="${app['profil.userName']}: "/><h:outputText value="${client.userName}" /><br/>
+				<h:outputText value="${app['profil.domainName']}: "/><h:outputText value="${client.domain}" /><br/>
+			</div>
+			<div class="col-sm-4">
+				<h:outputText value="${app['profil.isConnected']}: "/><h:outputText value="${client.xmppConnectionManager.isConnected()}" /><br/>
+				<h:outputText value="${app['profil.isAuthenticated']}: "/><h:outputText value="${client.xmppConnectionManager.isAuthenticated()}" /><br/>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-4">
+				<p:commandButton value="${app['profil.changepassword']}" type="button" onclick="PF('passwordDialog').show();" />
+				<p:dialog header="${app['profil.changepassword']}" widgetVar="passwordDialog" modal="true">
+				    <h:form class="form-horizontal">
+				    	<div class="form-group">
+				    		<h:outputLabel for="newPassword" value="#{app['profil.newPassword']}"/>
+				    		<h:inputSecret id="newPassword" required="true" class="form-control" value="#{client.newPassword}" />
+				    		<h:outputLabel for="newPasswordAgain" value="#{app['profil.newPasswordAgain']}"/>
+				    		<h:inputSecret id="newPasswordAgain" required="true" class="form-control" value="#{client.newPasswordAgain}" />
+				    		<h:commandButton value="#{app['profil.submitChangePassword']}" action="#{client.changePassword()}"/>
+				    	</div>
+				    </h:form>
+				</p:dialog> 
+			</div>
+		</div>
+	</div>
+</h:body> 
+</html>

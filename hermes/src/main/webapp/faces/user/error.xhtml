@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html">
+
+<h:head>
+	<title>#{app['errorPage.title']}</title>
+</h:head>
+<body>
+	<h1>#{app['errorPage.header']}</h1>
+	<br />
+	<h:outputText value="#{app['errorPage.errorCode']}: #{errorHandler.statusCode}"></h:outputText>
+	<br />
+	<h:outputText value="#{app['errorPage.errorDescription']}: #{errorHandler.message}"></h:outputText>
+	<br />
+	<h:outputText value="#{app['errorPage.exceptionType']}: #{errorHandler.exceptionType}"></h:outputText>
+	<br />
+	<h:outputText value="#{app['errorPage.exceptionClass']}: #{errorHandler.exception}"></h:outputText>
+	<br />
+	<h:outputText value="#{app['errorPage.requestURI']} : #{errorHandler.requestURI}"></h:outputText>
+</body>
+</html>

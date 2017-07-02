@@ -1,0 +1,25 @@
+<!DOCTYPE html> 
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+	  xmlns:em="http://java.sun.com/jsf/composite/components">
+<h:head>
+<title>#{app['homePage.title']}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+	<link rel="stylesheet"
+		href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" />
+		<h:outputScript library="js" name="menu.js" />
+	<h:outputStylesheet library="css" name="bootstrap.css"/>
+	<h:outputStylesheet library="css" name="bootstrap-theme.min.css"/>
+	<h:outputStylesheet library="css" name="bbootstrap-theme.css"/>
+</h:head>
+<h:body>
+	<h:form>
+		<em:userMenu></em:userMenu>
+	</h:form>
+	<div class="container-fluid">
+		<h:outputText value="#{app['homePage.welcomeMessage']}" />
+	</div>
+</h:body>
+</html>

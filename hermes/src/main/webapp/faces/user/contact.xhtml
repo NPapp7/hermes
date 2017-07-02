@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+	  xmlns:em="http://java.sun.com/jsf/composite/components"> 
+
+<h:head>
+	<title>#{app['contact.title']}</title>
+	<link rel="stylesheet"
+		href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" />
+	<h:outputScript library="js" name="menu.js" />
+	<h:outputStylesheet library="css" name="bootstrap.css" />
+	<h:outputStylesheet library="css" name="bootstrap-theme.min.css" />
+	<h:outputStylesheet library="css" name="bootstrap-theme.css" />
+</h:head> 
+<h:body> 
+		<em:userMenu></em:userMenu>
+		<div class="container">
+		<div class="row">
+			<div class="form-group">
+		<p:commandButton type="button" id="itemButtonForTable" onclick="PF('entryDialog').show();" value="#{app['contact.addContact']}" styleClass="btn btn-default"/>
+	</div>
+	<p:dialog header="#{app['contact.addContactEntry']}" widgetVar="entryDialog" height="80%" width="80%">
+		<h:form id="createEntry">
+			<h:messages />
+			<h:outputText value="#{app['contact.contactSearchString']}"/>
+			<h:inputText id="searchFieldForUserName" value="#{contactSearchBean.searchString}"/>
+			<br/>
+			<h:commandButton action="${contactSearchBean.search()}" value="Search" >
+				<f:ajax execute="searchFieldForUserName" render="userTable"/>
+			</h:commandButton>
+			<p:dataTable id="userTable" selectionMode="single" emptyMessage="#{app['contact.tableIsEmpty']}" selection="#{contactBean.userJID}" rowKey="#{result}" value="#{contactSearchBean.results}" var="result">
+		 <!--        <p:ajax event="rowSelect" update=":createEntry:userTable :createEntry:userJID" />
+       			<p:ajax event="rowUnselect" update=":createEntry:userTable :createEntry:userJID" /> -->  
+		        <p:column headerText="Content">
+		            <h:outputText value="#{result}" />
+		        </p:column>
+			</p:dataTable>
+		<!-- 	<div class="form-group">
+				<h:outputLabel class="col-2 col-form-label" value="#{app['ContactPage.name']}" for="userJID"/>
+				 <div class="col-10">
+					<h:inputText id="userJID" value="#{contactsBean.userJID}" class="form-control"/>
+				 </div>
+			</div>
+			 -->
+			<div class="form-group">
+				<div class="col-10">
+					<h:commandButton class="btn btn-primary" value="#{app['contact.createNewEntryForSelectedUser']}" action="#{contactBean.createEntry()}"></h:commandButton>
+				</div>
+			</div>
+		</h:form>
+	</p:dialog>
+			<div class="form-group">
+		<p:commandButton type="button" id="setPresenceButton" onclick="PF('presenceDialog').show();" value="#{app['contact.setPresence']}" styleClass="btn btn-default"/>
+	</div>
+		<p:dialog header="#{app['contact.presenceDialog']}" widgetVar="presenceDialog" height="200" width="60%">
+		<h:form id="setPresenceMessage">
+			<div class="form-group">
+				<h:outputLabel class="control-label" value="#{app['contact.setPresenceMessage']}" for="presenceInfo"/>
+				<h:inputText id="presenceInfo" class="form-control" value="#{contactBean.presenceInfoMessage}"/>
+			</div>
+			<div class="form-group">
+				<h:outputLabel class="control-label" value="#{app['contact.setPresenceMode']}" />
+				<h:selectOneMenu class="form-control" value="#{contactBean.selectedMode}">
+					<f:selectItem itemLabel="#{app['contact.presenceAvailable']}" itemValue="#{contactBean.presenceAvailable}"  />
+					<f:selectItem itemLabel="#{app['contact.presenceAway']}" itemValue="#{contactBean.presenceAway}" />
+					<f:selectItem itemLabel="#{app['contact.presenceChat']}" itemValue="#{contactBean.presenceChat}" />
+				</h:selectOneMenu>
+			</div>
+			<div class="form-group">
+				<h:commandButton class="form-control" styleClass="btn btn-primary" value="#{app['contact.sendPresenceMessage']}" action="#{contactBean.sendPresence()}"></h:commandButton>
+			</div>
+		</h:form>
+	</p:dialog>
+		</div>
+			<h:dataTable value="#{contactBean.contacts}" var="contact" class="table table-striped">
+				<h:column>
+					<f:facet name="header">#{app['contact.contactName']}</f:facet>
+						${contact.contactName}
+				</h:column>
+				<h:column>
+					<f:facet name="header">#{app['contact.contactPresenceMode']}</f:facet>
+						${contact.contactPresenceMode}
+				</h:column>
+				<h:column>
+					<f:facet name="header">#{app['contact.presenceText']}</f:facet>
+						${contact.presenceTextStatus}
+				</h:column>
+				<h:column>
+					<f:facet name="header">#{app['contact.removeEntry']}</f:facet>
+					<h:form>
+						<h:commandButton value="#{app['contact.removeButton']}" action="#{contactBean.deleteRosterEntry(contact.contactName)}"/>
+					</h:form>	
+				</h:column>
+			</h:dataTable>
+		</div>
+</h:body> 
+</html>

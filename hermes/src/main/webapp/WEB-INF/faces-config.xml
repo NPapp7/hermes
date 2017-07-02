@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faces-config version="2.2" xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_2.xsd">
+	<application>
+		<resource-bundle>
+			<base-name>appResources.appResources</base-name>
+			<var>app</var>
+		</resource-bundle>
+		<message-bundle>appResources.appResources</message-bundle>
+		<locale-config>
+			<default-locale>en</default-locale>
+			<supported-locale>en</supported-locale>
+			<supported-locale>hu</supported-locale>
+		</locale-config>
+	</application>
+	<navigation-rule> 
+	   <from-view-id>/faces/login.xhtml</from-view-id> 
+	   <navigation-case> 
+	      <from-action>#{client.login()}</from-action> 
+	      <from-outcome>successful_login</from-outcome> 
+	      <to-view-id>/faces/user/homePage.xhtml</to-view-id> 
+	   </navigation-case> 
+	</navigation-rule>
+	<navigation-rule> 
+	   <from-view-id>*</from-view-id> 
+	   <navigation-case> 
+	      <from-outcome>logout</from-outcome> 
+	      <to-view-id>/faces/login.xhtml</to-view-id> 
+	   </navigation-case> 
+	</navigation-rule> 
+</faces-config>
