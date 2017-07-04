@@ -91,14 +91,13 @@ public class ContactBean implements Serializable{
 			id += 1;
 			c.setId(id);
 			c.setContactName(entry.getUser());
-			if(presence.getMode()==presence.getMode().available){
+			if(presence.getMode()==presence.getMode().available)
 				c.setContactPresenceMode(resourceBundle.getString("contact.available") == null ? presence.getMode().name() : resourceBundle.getString("contact.available"));
-			}
-			else if(presence.getMode() == presence.getMode().away){
+			else if(presence.getMode() == presence.getMode().away)
 				c.setContactPresenceMode(resourceBundle.getString("contact.away") == null ? presence.getMode().name() : resourceBundle.getString("contact.away"));
-			} else if(presence.getMode() == presence.getMode().chat){
+			else if(presence.getMode() == presence.getMode().chat)
 				c.setContactPresenceMode(resourceBundle.getString("contact.away") == null ? presence.getMode().name() : resourceBundle.getString("contact.away"));
-			}
+			
 			c.setPresenceType(presence.getType().name());
 			c.setPresenceStatus(presence.isAvailable());
 			c.setPresenceTextStatus(presence.getStatus());

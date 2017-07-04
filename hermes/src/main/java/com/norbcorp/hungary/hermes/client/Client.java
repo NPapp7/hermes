@@ -3,10 +3,12 @@ package com.norbcorp.hungary.hermes.client;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.UnknownHostException;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -15,10 +17,9 @@ import javax.inject.Named;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.SmackException.NotLoggedInException;
+import org.jivesoftware.smack.XMPPException;
 
 import com.norbcorp.hungary.hermes.client.connection.XMPPConnectionManager;
-
-import org.jivesoftware.smack.XMPPException;
 
 /**
  * ClientManager manages the data of connections of an xmpp network.
@@ -38,8 +39,15 @@ public class Client implements Serializable{
 	private String domain="nor-pc";
 	static Logger logger = LogManager.getLogManager().getLogger(Client.class.getName());
 
+	Locale browserLocale;
+	
 	@Inject
 	private XMPPConnectionManager xmppConnectionManager;
+	
+/*	@PostConstruct
+	public void init(){
+		
+	}*/
 	
 	public  String login() throws InterruptedException, XMPPException, SmackException, IOException{
 		try {
@@ -123,5 +131,13 @@ public class Client implements Serializable{
 
 	public void setNewPasswordAgain(String newPasswordAgain) {
 		this.newPasswordAgain = newPasswordAgain;
+	}
+
+	public Locale getBrowserLocale() {
+		return browserLocale = FacesContext.getCurrentInstance().getViewRoot().getLocale();
+	}
+
+	public void setBrowserLocale(Locale browserLocale) {
+		this.browserLocale = browserLocale;
 	}
 }

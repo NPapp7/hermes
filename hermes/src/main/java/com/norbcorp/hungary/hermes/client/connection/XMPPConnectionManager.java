@@ -212,7 +212,7 @@ public class XMPPConnectionManager implements Serializable{
 	}
 
 	public Roster getRoster() {
-		if(roster==null){
+		if(roster==null && connection!=null){
 			roster=Roster.getInstanceFor(connection);
 		}
 		return roster;

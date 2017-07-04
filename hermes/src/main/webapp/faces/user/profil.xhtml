@@ -31,6 +31,9 @@
 				<h:outputText value="${app['profil.isConnected']}: "/><h:outputText value="${client.xmppConnectionManager.isConnected()}" /><br/>
 				<h:outputText value="${app['profil.isAuthenticated']}: "/><h:outputText value="${client.xmppConnectionManager.isAuthenticated()}" /><br/>
 			</div>
+			<div class="col-sm-4">
+				<h:outputText value="${app['profil.browserLocale']}: "></h:outputText><h:outputText value="${client.browserLocale.displayLanguage}" />
+			</div>
 		</div>
 		<div class="row">
 			<div class="col-sm-4">

@@ -19,6 +19,10 @@ public class Contact implements Serializable{
 		super();
 	}
 	
+	public Contact(String contactName){
+		this.contactName=contactName;
+	}
+	
 	public Contact(boolean presenceStatus, String presenceType, String contactName, String contactPresenceMode) {
 		super();
 		this.presenceStatus = presenceStatus;
@@ -84,6 +88,13 @@ public class Contact implements Serializable{
 		return true;
 	}
 	
+	
+	
+	@Override
+	public String toString() {
+		return contactName + "";
+	}
+
 	public String getPresenceTextStatus() {
 		return presenceTextStatus;
 	}

@@ -26,6 +26,6 @@
   </welcome-file-list>
   <error-page>
   	<error-code>500</error-code>
-  	<location>/faces/error.xhtml</location>
+  	<location>/faces/user/error.xhtml</location>
   </error-page>
 </web-app>
