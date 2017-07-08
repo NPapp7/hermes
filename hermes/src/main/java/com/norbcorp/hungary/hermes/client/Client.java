@@ -3,12 +3,14 @@ package com.norbcorp.hungary.hermes.client;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.UnknownHostException;
+import java.time.Instant;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -16,10 +18,14 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.SmackException.NotLoggedInException;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Message;
 
 import com.norbcorp.hungary.hermes.client.connection.XMPPConnectionManager;
+import com.norbcorp.hungary.hermes.client.contacts.ContactMessage;
+import com.norbcorp.hungary.hermes.client.contacts.Conversation;
 
 /**
  * ClientManager manages the data of connections of an xmpp network.

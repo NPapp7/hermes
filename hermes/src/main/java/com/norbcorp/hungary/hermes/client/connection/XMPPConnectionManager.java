@@ -2,6 +2,8 @@ package com.norbcorp.hungary.hermes.client.connection;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.Instant;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.logging.Logger;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.security.auth.callback.CallbackHandler;
 
@@ -27,7 +30,11 @@ import org.jivesoftware.smack.SmackException.NotLoggedInException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.XMPPException.XMPPErrorException;
+import org.jivesoftware.smack.chat.Chat;
 import org.jivesoftware.smack.chat.ChatManager;
+import org.jivesoftware.smack.chat.ChatManagerListener;
+import org.jivesoftware.smack.chat.ChatMessageListener;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
@@ -37,13 +44,20 @@ import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smack.util.ByteUtils;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.pubsub.PubSubManager;
-import org.jivesoftware.smackx.search.UserSearchManager;
 import org.jivesoftware.smackx.search.ReportedData.Row;
+import org.jivesoftware.smackx.search.UserSearchManager;
 import org.jivesoftware.smackx.xdata.Form;
 
-//import com.norbcorp.hungary.jsfwithxmpp.managedbean.application.ConnectionFactory.ChatManagerListenerImpl;
+import com.norbcorp.hungary.hermes.client.Client;
+import com.norbcorp.hungary.hermes.client.contacts.ContactMessage;
+import com.norbcorp.hungary.hermes.client.contacts.Conversation;
 
-
+/**
+ * 
+ * 
+ * @author nor
+ *
+ */
 @Named("xmppCon")
 @SessionScoped
 public class XMPPConnectionManager implements Serializable{
@@ -53,15 +67,87 @@ public class XMPPConnectionManager implements Serializable{
 	private static Logger logger = Logger.getLogger(XMPPConnectionManager.class.getName());
 	
 	private final int PORT=5222;
+
+	/**
+	 * Key-value pairs of String and Conversation entries.
+	 */
+	private HashMap<String, Conversation> chatHistory = new HashMap<String, Conversation>();
 	
 	private static final int PACKET_REPLY_TIMEOUT= 100000;
 	private XMPPTCPConnectionConfiguration.Builder config;
 	private AbstractXMPPConnection connection = null;
 	private Roster roster;
-	//private ConnectionConfiguration connConfig; 
+	private Chat chat; 
+	
+	private ChatMessageListener myMessageListener = new MyMessageListener();
 	
 	PubSubManager pbmgr;
 	
+	@Inject
+	private Client client;
+	
+	/**
+	 * Listener class for getting messages from contacts
+	 * 
+	 * @author nor
+	 */
+	class MyMessageListener implements ChatMessageListener {
+		@Override
+		public void processMessage(Chat chat, Message message) {
+			String from = message.getFrom();
+			String body = message.getBody();
+
+			if (body != null && from != null) {
+
+				// to get rid of the client name
+				from = from.split("/")[0];
+
+				if (!chatHistory.containsKey(from)) {
+					List<ContactMessage> messages = new LinkedList<ContactMessage>();
+					messages.add(new ContactMessage(from, body, Instant.now()));
+					chatHistory.put(from, new Conversation(messages));
+				} else {
+					chatHistory.get(from).getMessages().add(new ContactMessage(from, body, Instant.now()));
+				}
+			}
+		}
+	}
+	
+	public void sendMessage(String message, String userJIDAndDomain) throws Exception {
+		try {
+			if (chat != null) {
+				Message customMessage = new Message(userJIDAndDomain, message);
+				chat.sendMessage(customMessage);
+				// Store the message
+				if (!chatHistory.containsKey(userJIDAndDomain)) {
+					List<ContactMessage> messages = new LinkedList<ContactMessage>();
+					messages.add(new ContactMessage(userJIDAndDomain, message, Instant.now()));
+					chatHistory.put(userJIDAndDomain, new Conversation(messages));
+				} else {
+					chatHistory.get(userJIDAndDomain).getMessages()
+							.add(new ContactMessage(client.getUserName(), message, Instant.now()));
+				}
+
+			} else{
+				createEntry(userJIDAndDomain);
+				sendMessage(message,userJIDAndDomain);
+			}
+		} catch (NotConnectedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Connect and login to a XMPP network,
+	 * 
+	 * @param server name of server or domain
+	 * @param userName name of the current user
+	 * @param password password of the current user
+	 * @throws InterruptedException
+	 * @throws XMPPException
+	 * @throws SmackException
+	 * @throws IOException
+	 */
 	public  void connectAndLogin(final String server, final String userName, final String password) throws InterruptedException, XMPPException, SmackException, IOException{
 		logger.info(String.format("Initializing connection to server: %1$s port %2$2d", server, PORT));
 		if (connection == null || !connection.isConnected() || !connection.isAuthenticated()) {
@@ -164,6 +250,11 @@ public class XMPPConnectionManager implements Serializable{
 		}
 	}
 	
+	/**
+	 * Invalidates the session and disconnect from the server.
+	 * 
+	 * @return <i>String</i> which is used for navigation.
+	 */
 	public String logout() {
 		if (connection != null) {
 			connection.disconnect();
@@ -173,6 +264,11 @@ public class XMPPConnectionManager implements Serializable{
 		return "logout";
 	}
 	
+	/**
+	 * 
+	 * 
+	 * @param newPassword of user. 
+	 */
 	public void changePassword(String newPassword){
 		try {
 			AccountManager accountManager = AccountManager.getInstance(connection);
@@ -244,7 +340,7 @@ public class XMPPConnectionManager implements Serializable{
 	 * 
 	 * @param search: <i>String</i>  
 	 * 
-	 * @return List of user who match with the search string.
+	 * @return List of users who match with the search string.
 	 * @throws NoResponseException
 	 * @throws XMPPErrorException
 	 * @throws NotConnectedException
@@ -265,6 +361,42 @@ public class XMPPConnectionManager implements Serializable{
 		return result;
 	}
 	
+	public HashMap<String, Conversation> getChatHistory() {
+		return chatHistory;
+	}
+
+	public void setChatHistory(HashMap<String, Conversation> chatHistory) {
+		this.chatHistory = chatHistory;
+	}
+
+	private class ChatManagerListenerImpl implements ChatManagerListener {
+
+		/** {@inheritDoc} */
+		@Override
+		public void chatCreated(final Chat chat, final boolean createdLocally) {
+			chat.addMessageListener(myMessageListener);
+		}
+
+	}
+
+	/**
+	 * Communication history between the current user and the selected user.
+	 * 
+	 * @param userName name of the user
+	 * @return <i>List</i> of <i>ContactMessage</i> entries.
+	 */
+	public List<ContactMessage> getHistoryByName(String userName) {
+		if (userName != null) {
+			userName+="@"+client.getDomain();
+			if (chatHistory.get(userName) != null)
+				return chatHistory.get(userName).getMessages();
+			else {
+				chatHistory.put(userName, new Conversation(new LinkedList<ContactMessage>()));
+				return chatHistory.get(userName).getMessages();
+			}
+		} else
+			return new LinkedList<ContactMessage>();
+	}
 	
 	/**
 	 * 
@@ -273,9 +405,9 @@ public class XMPPConnectionManager implements Serializable{
 	 */
 	public void createEntry(String userJIDAndDomain) throws Exception {
 		logger.info(String.format("Creating entry for buddy '%1$s", userJIDAndDomain));
-		//ChatManager.getInstanceFor(connection).addChatListener(new ChatManagerListenerImpl());
+		ChatManager.getInstanceFor(connection).addChatListener(new ChatManagerListenerImpl());
 		Roster.getInstanceFor(connection).createEntry(userJIDAndDomain, userJIDAndDomain.split("@")[0], null);
-	//	this.chat = ChatManager.getInstanceFor(connection).createChat(userJIDAndDomain, myMessageListener);
-	//	logger.info("Chat is initiated: " + (chat == null ? "No" : "Yes"));
+		this.chat = ChatManager.getInstanceFor(connection).createChat(userJIDAndDomain, myMessageListener);
+		logger.info("Chat is initiated: " + (chat == null ? "No" : "Yes"));
 	}
 }

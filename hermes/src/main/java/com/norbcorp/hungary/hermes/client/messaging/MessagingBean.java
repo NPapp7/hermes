@@ -17,9 +17,16 @@ import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.Roster.SubscriptionMode;
 import org.jivesoftware.smack.roster.RosterEntry;
 
+import com.norbcorp.hungary.hermes.client.Client;
 import com.norbcorp.hungary.hermes.client.connection.XMPPConnectionManager;
 import com.norbcorp.hungary.hermes.client.contacts.Contact;
 
+/**
+ * Bean for sending and receiving messages.
+ * 
+ * @author nor
+ *
+ */
 @Named
 @ViewScoped
 public class MessagingBean implements Serializable {
@@ -28,6 +35,13 @@ public class MessagingBean implements Serializable {
 	
 	private static Logger logger = Logger.getLogger(MessagingBean.class.getName()); 
 
+	private String messages;
+	private String currentMessage;
+	private String userJIDAndDomain;
+	
+	/**
+	 * List of available contacts who are ready for talk.
+	 */
 	private List<Contact> listOfAvailableContacts;
 
 	/**
@@ -37,6 +51,8 @@ public class MessagingBean implements Serializable {
 	
 	@Inject
 	private XMPPConnectionManager xmppManager;
+	@Inject
+	private Client client;
 	
 	@PostConstruct
 	public void init(){
@@ -47,13 +63,14 @@ public class MessagingBean implements Serializable {
 			roster.reload();
 			int id = 0;
 			for (RosterEntry entry : xmppManager.getRosters()) {
-				Contact c = new Contact();
-				Presence presence = roster.getPresence(entry.getUser());
-				logger.info("Found available user: "+entry.getUser());
-				//if(presence.getMode()==presence.getMode().available){
+				//The first entry is always the logged user.
+				if(!(client.getUserName().equalsIgnoreCase(entry.getUser().split("@")[0]))){
+					Contact c = new Contact();
+					Presence presence = roster.getPresence(entry.getUser());
+					logger.info("Found available user: "+entry.getUser());
 					id += 1;
 					c.setId(id);
-					c.setContactName(entry.getUser());
+					c.setContactName(entry.getUser().split("@")[0]);
 					c.setPresenceType(presence.getType().name());
 					c.setPresenceStatus(presence.isAvailable());
 					c.setPresenceTextStatus(presence.getStatus());
@@ -62,7 +79,7 @@ public class MessagingBean implements Serializable {
 						listOfAvailableContacts.get(listOfAvailableContacts.indexOf(c)).setPresenceStatus(c.isPresenceStatus());
 					} else
 						listOfAvailableContacts.add(c);
-			//	}
+				}
 			}
 		}catch(NotLoggedInException|NotConnectedException|InterruptedException exc){
 			logger.warning("Exception occured:"+exc);
@@ -95,5 +112,38 @@ public class MessagingBean implements Serializable {
 	
 	public void selectForCommunication(){
 		logger.info(this.selectedContact+"");
+	}
+	
+	public String getMessages() {
+		return messages;
+	}
+	public void setMessages(String messages) {
+		this.messages = messages;
+	}
+	public String getCurrentMessage() {
+		return currentMessage;
+	}
+	public void setCurrentMessage(String currentMessage) {
+		this.currentMessage = currentMessage;
+	}
+	
+	public String getUserJIDAndDomain() {
+		return userJIDAndDomain;
+	}
+	public void setUserJIDAndDomain(String userJIDAndDomain) {
+		this.userJIDAndDomain = userJIDAndDomain;
+	}
+	
+	public void sendMessage(String userName) throws Exception{
+		logger.info("Send user message to "+userName+", "+client.getDomain());
+		userJIDAndDomain=userName+"@"+client.getDomain();
+		if(userJIDAndDomain==null || userJIDAndDomain.equals("") || currentMessage==null || currentMessage.equals(""))
+		{
+			return;
+		}
+		else{
+			xmppManager.sendMessage(currentMessage, userJIDAndDomain);
+			currentMessage="";
+		}
 	}
 }

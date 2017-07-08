@@ -24,17 +24,17 @@ import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.Roster.SubscriptionMode;
 import org.jivesoftware.smack.roster.RosterEntry;
 
+import com.norbcorp.hungary.hermes.client.Client;
 import com.norbcorp.hungary.hermes.client.connection.XMPPConnectionManager;
-
 
 @Named
 @ViewScoped
-public class ContactBean implements Serializable{
+public class ContactBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(ContactBean.class.getName());
-	
+
 	/**
 	 * List of users who are online.
 	 */
@@ -67,9 +67,11 @@ public class ContactBean implements Serializable{
 	private Presence.Mode presenceChat = Presence.Mode.chat;
 
 	private ResourceBundle resourceBundle;
-	
+
 	@Inject
 	private XMPPConnectionManager xmppManager;
+	@Inject
+	private Client client;
 
 	@PostConstruct
 	public void init() {
@@ -86,26 +88,31 @@ public class ContactBean implements Serializable{
 		roster.reload();
 		int id = 0;
 		for (RosterEntry entry : xmppManager.getRosters()) {
-			Contact c = new Contact();
-			presence = roster.getPresence(entry.getUser());
-			id += 1;
-			c.setId(id);
-			c.setContactName(entry.getUser());
-			if(presence.getMode()==presence.getMode().available)
-				c.setContactPresenceMode(resourceBundle.getString("contact.available") == null ? presence.getMode().name() : resourceBundle.getString("contact.available"));
-			else if(presence.getMode() == presence.getMode().away)
-				c.setContactPresenceMode(resourceBundle.getString("contact.away") == null ? presence.getMode().name() : resourceBundle.getString("contact.away"));
-			else if(presence.getMode() == presence.getMode().chat)
-				c.setContactPresenceMode(resourceBundle.getString("contact.away") == null ? presence.getMode().name() : resourceBundle.getString("contact.away"));
-			
-			c.setPresenceType(presence.getType().name());
-			c.setPresenceStatus(presence.isAvailable());
-			c.setPresenceTextStatus(presence.getStatus());
+			if (!(client.getUserName().equalsIgnoreCase(entry.getUser().split("@")[0]))) {
+				Contact contact = new Contact();
+				presence = roster.getPresence(entry.getUser());
+				id += 1;
+				contact.setId(id);
+				contact.setContactName(entry.getUser().split("@")[0]);
+				if (presence.getMode() == presence.getMode().available)
+					contact.setContactPresenceMode(resourceBundle.getString("contact.available") == null
+							? presence.getMode().name() : resourceBundle.getString("contact.available"));
+				else if (presence.getMode() == presence.getMode().away)
+					contact.setContactPresenceMode(resourceBundle.getString("contact.away") == null
+							? presence.getMode().name() : resourceBundle.getString("contact.away"));
+				else if (presence.getMode() == presence.getMode().chat)
+					contact.setContactPresenceMode(resourceBundle.getString("contact.away") == null
+							? presence.getMode().name() : resourceBundle.getString("contact.away"));
 
-			if (contacts.contains(c)) {
-				contacts.get(contacts.indexOf(c)).setPresenceStatus(c.isPresenceStatus());
-			} else
-				contacts.add(c);
+				contact.setPresenceType(presence.getType().name());
+				contact.setPresenceStatus(presence.isAvailable());
+				contact.setPresenceTextStatus(presence.getStatus());
+
+				if (contacts.contains(contact)) {
+					contacts.get(contacts.indexOf(contact)).setPresenceStatus(contact.isPresenceStatus());
+				} else
+					contacts.add(contact);
+			}
 		}
 		return contacts;
 	}
@@ -120,11 +127,11 @@ public class ContactBean implements Serializable{
 	 * @throws Exception
 	 */
 	public void createEntry() throws Exception {
-		if(this.userJID!=null && !(this.userJID.equals("")))
+		if (this.userJID != null && !(this.userJID.equals("")))
 			this.xmppManager.createEntry(this.userJID + "@nor-pc");
 		else
 			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Please select an user first"));
-		this.contacts=this.getContacts();
+		this.contacts = this.getContacts();
 	}
 
 	public String getUserJID() {
@@ -143,11 +150,11 @@ public class ContactBean implements Serializable{
 		this.selectedContact = selectedContact;
 	}
 
-	public void deleteRosterEntry(String username)
-			throws NotLoggedInException, NoResponseException, XMPPErrorException, NotConnectedException, InterruptedException {
+	public void deleteRosterEntry(String username) throws NotLoggedInException, NoResponseException, XMPPErrorException,
+			NotConnectedException, InterruptedException {
 		RosterEntry re = xmppManager.getRoster().getEntry(username);
 		xmppManager.getRoster().removeEntry(re);
-		this.contacts=this.getContacts();
+		this.contacts = this.getContacts();
 	}
 
 	public String getPresenceInfoMessage() {
@@ -161,7 +168,7 @@ public class ContactBean implements Serializable{
 	public void sendCustomStanza(Stanza stanza) {
 		this.xmppManager.sendStanza(stanza);
 	}
-	
+
 	/**
 	 * Sends the presence to the rosters of other users.
 	 */

@@ -18,15 +18,43 @@
 <h:body> 
 		<em:userMenu></em:userMenu>
 		<div class="container">
-			<h:form class="form-horizontal">
+			<h:form id="form" class="form-horizontal">
 				<h:outputLabel for="selectContact" value="#{app['messaging.selectContact']}"/>
 				<h:selectOneMenu id="selectContact" class="form-control" value="#{messagingBean.selectedContact}">
 					<f:selectItems value="#{messagingBean.listOfAvailableContacts}"></f:selectItems>
 					<f:converter binding="#{contactConverter}"></f:converter>
+					<f:ajax execute="@this" render=":form:historyMessage" />
 				</h:selectOneMenu>
-				<div class="col-sm4">
-					<h:commandButton action="#{messagingBean.selectForCommunication()}" value="Submit" />
-				</div>
+	
+				<h:outputLabel for="message" value="#{app['messaging.messageTo']}"></h:outputLabel>
+				<h:inputText class="form-control" id="message" value="#{messagingBean.currentMessage}"></h:inputText>
+				<h:commandButton class="btn btn-default" value="#{app['messaging.send']}" action="#{messagingBean.sendMessage(messagingBean.selectedContact)}">
+					<f:ajax execute=":form:message :form:selectContact" render=":form:historyMessage"/>
+				</h:commandButton>
+				
+				 <p:poll interval="2" update="historyMessage" />
+			
+	 <h:panelGrid id="historyMessage" style="width:100%;">
+    		<p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
+			<div style="padding-left:2cm; padding-right:2cm; padding-bottom:1cm;">
+		<h:dataTable id="history" value="#{xmppCon.getHistoryByName(messagingBean.selectedContact.contactName)}" var="message" style="width:80%; padding-left:2cm; padding-right:2cm;" disabled="true">
+			<h:column>
+			<f:facet name="header">#{app['messaging.historyMessages.name']}</f:facet>
+				#{message.userName.split("@")[0]}
+			</h:column>
+			<h:column>
+			<f:facet name="header">#{app['messaging.historyMessages.message']}</f:facet>
+				#{message.message}
+			</h:column>
+			<h:column>
+			<f:facet name="header">#{app['messaging.historyMessages.time']}</f:facet>
+				<h:outputText value="#{message.time}">
+					<f:convertDateTime pattern="yyyy.MM.dd HH:mm" />
+				</h:outputText>
+			</h:column>
+	</h:dataTable>
+		</div>
+	</h:panelGrid>
 			</h:form>
 		</div>
 </h:body> 

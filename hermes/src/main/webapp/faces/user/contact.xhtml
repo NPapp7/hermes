@@ -20,7 +20,7 @@
 		<div class="container">
 		<div class="row">
 			<div class="form-group">
-		<p:commandButton type="button" id="itemButtonForTable" onclick="PF('entryDialog').show();" value="#{app['contact.addContact']}" styleClass="btn btn-default"/>
+		<p:commandButton type="button" class="btn btn-default" id="itemButtonForTable" onclick="PF('entryDialog').show();" value="#{app['contact.addContact']}" styleClass="btn btn-default"/>
 	</div>
 	<p:dialog header="#{app['contact.addContactEntry']}" widgetVar="entryDialog" height="80%" width="80%">
 		<h:form id="createEntry">
@@ -28,9 +28,11 @@
 			<h:outputText value="#{app['contact.contactSearchString']}"/>
 			<h:inputText id="searchFieldForUserName" value="#{contactSearchBean.searchString}"/>
 			<br/>
-			<h:commandButton action="${contactSearchBean.search()}" value="Search" >
+			<h:commandButton class="btn btn-default" action="${contactSearchBean.search()}" value="Search" >
 				<f:ajax execute="searchFieldForUserName" render="userTable"/>
 			</h:commandButton>
+			<br/>
+			<br/>
 			<p:dataTable id="userTable" selectionMode="single" emptyMessage="#{app['contact.tableIsEmpty']}" selection="#{contactBean.userJID}" rowKey="#{result}" value="#{contactSearchBean.results}" var="result">
 		 <!--        <p:ajax event="rowSelect" update=":createEntry:userTable :createEntry:userJID" />
        			<p:ajax event="rowUnselect" update=":createEntry:userTable :createEntry:userJID" /> -->  
@@ -81,12 +83,12 @@
 						${contact.contactName}
 				</h:column>
 				<h:column>
-					<f:facet name="header">#{app['contact.contactPresenceMode']}</f:facet>
-						${contact.contactPresenceMode}
-				</h:column>
-				<h:column>
 					<f:facet name="header">#{app['contact.presenceText']}</f:facet>
 						${contact.presenceTextStatus}
+				</h:column>
+				<h:column>
+					<f:facet name="header">#{app['contact.presenceStatus']}</f:facet>
+						${contact.presenceStatus}
 				</h:column>
 				<h:column>
 					<f:facet name="header">#{app['contact.removeEntry']}</f:facet>
