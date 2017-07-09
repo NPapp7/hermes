@@ -88,11 +88,12 @@
 				</h:column>
 				<h:column>
 					<f:facet name="header">#{app['contact.presenceStatus']}</f:facet>
-						${contact.presenceStatus}
+					 <h:graphicImage rendered="${contact.presenceStatus}" title="Active" width="25px" height="25px" library="images" name="Active.png" />
+					 <h:graphicImage rendered="${not contact.presenceStatus}" title="Passive" width="25px" height="25px" library="images" name="Passive.png" />
 				</h:column>
 				<h:column>
 					<f:facet name="header">#{app['contact.removeEntry']}</f:facet>
-					<h:form>
+					<h:form>í
 						<h:commandButton value="#{app['contact.removeButton']}" action="#{contactBean.deleteRosterEntry(contact.contactName)}"/>
 					</h:form>	
 				</h:column>

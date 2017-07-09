@@ -134,6 +134,12 @@ public class MessagingBean implements Serializable {
 		this.userJIDAndDomain = userJIDAndDomain;
 	}
 	
+	/**
+	 * It sends the currentMessage value
+	 * 
+	 * @param userName user name without domain name
+	 * @throws Exception
+	 */
 	public void sendMessage(String userName) throws Exception{
 		logger.info("Send user message to "+userName+", "+client.getDomain());
 		userJIDAndDomain=userName+"@"+client.getDomain();

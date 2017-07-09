@@ -51,6 +51,7 @@ import org.jivesoftware.smackx.xdata.Form;
 import com.norbcorp.hungary.hermes.client.Client;
 import com.norbcorp.hungary.hermes.client.contacts.ContactMessage;
 import com.norbcorp.hungary.hermes.client.contacts.Conversation;
+import com.norbcorp.hungary.hermes.client.contacts.listeners.HermesRosterListener;
 
 /**
  * 
@@ -115,7 +116,8 @@ public class XMPPConnectionManager implements Serializable{
 	
 	public void sendMessage(String message, String userJIDAndDomain) throws Exception {
 		try {
-			if (chat != null) {
+			if (chat != null && chat.getParticipant().equalsIgnoreCase(userJIDAndDomain)) {
+				logger.warning("Chat with "+chat.getParticipant());
 				Message customMessage = new Message(userJIDAndDomain, message);
 				chat.sendMessage(customMessage);
 				// Store the message
@@ -127,8 +129,9 @@ public class XMPPConnectionManager implements Serializable{
 					chatHistory.get(userJIDAndDomain).getMessages()
 							.add(new ContactMessage(client.getUserName(), message, Instant.now()));
 				}
+				logger.info("Participant is "+chat.getParticipant());
 
-			} else{
+			} else {
 				createEntry(userJIDAndDomain);
 				sendMessage(message,userJIDAndDomain);
 			}
@@ -239,6 +242,8 @@ public class XMPPConnectionManager implements Serializable{
 	                connection.setPacketReplyTimeout(10000);
 	                connection.addConnectionListener(connectionListener);
 	                connection.connect();
+	                Roster roster = Roster.getInstanceFor(connection);
+	                roster.addRosterListener(new HermesRosterListener());
 	            } catch (SmackException e) {
 	                e.printStackTrace();
 	            } catch (IOException e) {
@@ -265,7 +270,7 @@ public class XMPPConnectionManager implements Serializable{
 	}
 	
 	/**
-	 * 
+	 * Change password the logged user.
 	 * 
 	 * @param newPassword of user. 
 	 */
