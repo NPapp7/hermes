@@ -32,30 +32,27 @@
 					<f:ajax execute=":form:message :form:selectContact" render=":form:historyMessage"/>
 				</h:commandButton>
 				
-				 <p:poll interval="2" update="historyMessage" />
+				<p:poll interval="2" update="historyMessage" />
 			
-	 <h:panelGrid id="historyMessage" style="width:100%;">
-    		<p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
-			<div style="padding-left:2cm; padding-right:2cm; padding-bottom:1cm;">
-		<h:dataTable id="history" value="#{xmppCon.getHistoryByName(messagingBean.selectedContact.contactName)}" var="message" style="width:80%; padding-left:2cm; padding-right:2cm;" disabled="true">
-			<h:column>
-			<f:facet name="header">#{app['messaging.historyMessages.name']}</f:facet>
-				#{message.userName.split("@")[0]}
-			</h:column>
-			<h:column>
-			<f:facet name="header">#{app['messaging.historyMessages.message']}</f:facet>
-				#{message.message}
-			</h:column>
-			<h:column>
-			<f:facet name="header">#{app['messaging.historyMessages.time']}</f:facet>
-				<h:outputText value="#{message.time}">
-					<f:convertDateTime pattern="yyyy.MM.dd HH:mm" />
-				</h:outputText>
-			</h:column>
-	</h:dataTable>
-		</div>
-	</h:panelGrid>
-			</h:form>
-		</div>
+				 <h:panelGrid id="historyMessage" style="width:100%;">
+		    		<p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
+					<div style="padding-left:2cm; padding-right:2cm; padding-bottom:1cm;">
+						<p:dataTable emptyMessage="#{app['messaging.messagingTableEmptyMessage']}" id="history" value="#{xmppCon.getHistoryByName(messagingBean.selectedContact.contactName)}" virtualScroll="true" scrollable="true" scrollHeight="300" var="message" style="width:100%; padding-left:2cm; padding-right:2cm;">
+							<p:column headerText="#{app['messaging.historyMessages.name']}">
+				           		#{message.userName.split("@")[0]}
+				       		</p:column>
+							<p:column headerText="#{app['messaging.historyMessages.message']}">
+								#{message.message}
+							</p:column>
+							<p:column headerText="#{app['messaging.historyMessages.time']}">
+								<h:outputText value="#{message.time}">
+									<f:convertDateTime pattern="yyyy.MM.dd HH:mm" />
+								</h:outputText>
+							</p:column>
+					</p:dataTable>
+					</div>
+				</h:panelGrid>
+	</h:form>
+	</div>
 </h:body> 
 </html>

@@ -17,6 +17,7 @@ import org.jivesoftware.smack.roster.RosterListener;
  */
 public class HermesRosterListener implements RosterListener{
 
+
 	private static Logger logger = Logger.getLogger(HermesRosterListener.class.getName());
 	
 	@Override
@@ -39,9 +40,7 @@ public class HermesRosterListener implements RosterListener{
 
 	@Override
 	public void presenceChanged(Presence presence) {
-		logger.info(presence+"");
 		//if(presence!=null && presence.getFrom()!=null)
-		//FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Presence changed "+presence.getFrom()+" presence"));
 		logger.info("Presence changed "+presence.getFrom()+" presence to "+presence.getStatus());
 	}
 

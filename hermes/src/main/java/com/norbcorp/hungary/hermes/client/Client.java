@@ -44,6 +44,11 @@ public class Client implements Serializable{
 	private String newPasswordAgain;
 	private String domain="nor-pc";
 	static Logger logger = LogManager.getLogManager().getLogger(Client.class.getName());
+	
+	/**
+	 * Current presence text which can be modified by the user.
+	 */
+	private String presenceText;
 
 	Locale browserLocale;
 	
@@ -145,5 +150,13 @@ public class Client implements Serializable{
 
 	public void setBrowserLocale(Locale browserLocale) {
 		this.browserLocale = browserLocale;
+	}
+
+	public String getPresenceText() {
+		return presenceText;
+	}
+
+	public void setPresenceText(String presenceText) {
+		this.presenceText = presenceText;
 	}
 }

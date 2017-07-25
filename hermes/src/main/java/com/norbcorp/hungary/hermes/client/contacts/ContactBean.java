@@ -74,46 +74,17 @@ public class ContactBean implements Serializable {
 	private Client client;
 
 	@PostConstruct
-	public void init() {
-		contacts = new LinkedList<Contact>();
+	public void init() throws NotLoggedInException, NotConnectedException, InterruptedException {
 		FacesContext facesContext = FacesContext.getCurrentInstance();
 		String messageBundleName = facesContext.getApplication().getMessageBundle();
 		Locale locale = facesContext.getViewRoot().getLocale();
 		resourceBundle = ResourceBundle.getBundle(messageBundleName, locale);
+		
+		//Load contacts from the server
+		contacts=xmppManager.getContacts();
 	}
 
 	public List<Contact> getContacts() throws NotLoggedInException, NotConnectedException, InterruptedException {
-		Roster roster = xmppManager.getRoster();
-		roster.setDefaultSubscriptionMode(SubscriptionMode.accept_all);
-		roster.reload();
-		int id = 0;
-		for (RosterEntry entry : xmppManager.getRosters()) {
-			if (!(client.getUserName().equalsIgnoreCase(entry.getUser().split("@")[0]))) {
-				Contact contact = new Contact();
-				presence = roster.getPresence(entry.getUser());
-				id += 1;
-				contact.setId(id);
-				contact.setContactName(entry.getUser().split("@")[0]);
-				if (presence.getMode() == presence.getMode().available)
-					contact.setContactPresenceMode(resourceBundle.getString("contact.available") == null
-							? presence.getMode().name() : resourceBundle.getString("contact.available"));
-				else if (presence.getMode() == presence.getMode().away)
-					contact.setContactPresenceMode(resourceBundle.getString("contact.away") == null
-							? presence.getMode().name() : resourceBundle.getString("contact.away"));
-				else if (presence.getMode() == presence.getMode().chat)
-					contact.setContactPresenceMode(resourceBundle.getString("contact.away") == null
-							? presence.getMode().name() : resourceBundle.getString("contact.away"));
-
-				contact.setPresenceType(presence.getType().name());
-				contact.setPresenceStatus(presence.isAvailable());
-				contact.setPresenceTextStatus(presence.getStatus());
-
-				if (contacts.contains(contact)) {
-					contacts.get(contacts.indexOf(contact)).setPresenceStatus(contact.isPresenceStatus());
-				} else
-					contacts.add(contact);
-			}
-		}
 		return contacts;
 	}
 
@@ -175,6 +146,7 @@ public class ContactBean implements Serializable {
 	public void sendPresence() {
 		this.presence = new Presence(Presence.Type.available, presenceInfoMessage, 1, this.selectedMode);
 		this.xmppManager.sendCustomStanza(presence);
+		client.setPresenceText(presenceInfoMessage);
 	}
 
 	public Presence.Mode getSelectedMode() {

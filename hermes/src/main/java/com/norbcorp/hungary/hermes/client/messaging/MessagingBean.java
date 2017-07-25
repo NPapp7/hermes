@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
+import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -20,6 +21,7 @@ import org.jivesoftware.smack.roster.RosterEntry;
 import com.norbcorp.hungary.hermes.client.Client;
 import com.norbcorp.hungary.hermes.client.connection.XMPPConnectionManager;
 import com.norbcorp.hungary.hermes.client.contacts.Contact;
+import com.norbcorp.hungary.hermes.client.contacts.listeners.HermesRosterListener;
 
 /**
  * Bean for sending and receiving messages.
@@ -55,35 +57,8 @@ public class MessagingBean implements Serializable {
 	private Client client;
 	
 	@PostConstruct
-	public void init(){
-		try{
-			listOfAvailableContacts = new LinkedList<Contact>();
-			Roster roster = xmppManager.getRoster();
-			roster.setDefaultSubscriptionMode(SubscriptionMode.accept_all);
-			roster.reload();
-			int id = 0;
-			for (RosterEntry entry : xmppManager.getRosters()) {
-				//The first entry is always the logged user.
-				if(!(client.getUserName().equalsIgnoreCase(entry.getUser().split("@")[0]))){
-					Contact c = new Contact();
-					Presence presence = roster.getPresence(entry.getUser());
-					logger.info("Found available user: "+entry.getUser());
-					id += 1;
-					c.setId(id);
-					c.setContactName(entry.getUser().split("@")[0]);
-					c.setPresenceType(presence.getType().name());
-					c.setPresenceStatus(presence.isAvailable());
-					c.setPresenceTextStatus(presence.getStatus());
-		
-					if (listOfAvailableContacts.contains(c)) {
-						listOfAvailableContacts.get(listOfAvailableContacts.indexOf(c)).setPresenceStatus(c.isPresenceStatus());
-					} else
-						listOfAvailableContacts.add(c);
-				}
-			}
-		}catch(NotLoggedInException|NotConnectedException|InterruptedException exc){
-			logger.warning("Exception occured:"+exc);
-		}
+	public void init() throws NotLoggedInException, NotConnectedException, InterruptedException{
+		listOfAvailableContacts = xmppManager.getContacts();
 	}
 	
 	/**

@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.Date;
 
-public class ContactMessage implements Serializable{
+public class ContactMessage implements Serializable, Comparable<ContactMessage>{
 	
 	private static final long serialVersionUID = 1L;
 	private String userName;
@@ -37,5 +37,10 @@ public class ContactMessage implements Serializable{
 	}
 	public void setTime(Instant time) {
 		this.time = time;
+	}
+	
+	@Override
+	public int compareTo(ContactMessage o) {
+		return this.getTime().compareTo(o.getTime());
 	}
 }

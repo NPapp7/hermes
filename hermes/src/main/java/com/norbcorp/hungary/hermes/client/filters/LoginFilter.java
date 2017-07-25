@@ -40,12 +40,11 @@ public class LoginFilter implements Filter{
 		            String contextPath = ((HttpServletRequest)request).getContextPath();
 		            ((HttpServletResponse)response).sendRedirect(contextPath + "/faces/login.xhtml");
 		        }
-		         
 		        chain.doFilter(request, response);
 	        } catch(ViewExpiredException viewExpiredException){
 	        	logger.warning(viewExpiredException.getMessage());
-	        }catch(NullPointerException|IllegalStateException npe){
-	        	logger.warning(npe.getMessage());
+	        }catch(NullPointerException|IllegalStateException|ServletException npe){
+	        	logger.severe(npe.getMessage());
 	        	/*String contextPath = ((HttpServletRequest)request).getContextPath();
 	            ((HttpServletResponse)response).sendRedirect(contextPath + "/faces/login.xhtml");*/
 	        }

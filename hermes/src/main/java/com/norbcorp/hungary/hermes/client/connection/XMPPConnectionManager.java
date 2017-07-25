@@ -17,6 +17,7 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.security.auth.callback.CallbackHandler;
+import javax.servlet.jsp.tagext.JspIdConsumer;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
@@ -35,23 +36,33 @@ import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.chat.ChatManagerListener;
 import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.roster.Roster.SubscriptionMode;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.sasl.SASLMechanism;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smack.util.ByteUtils;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jivesoftware.smackx.muc.DiscussionHistory;
+import org.jivesoftware.smackx.muc.InvitationRejectionListener;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.pubsub.PubSubManager;
 import org.jivesoftware.smackx.search.ReportedData.Row;
 import org.jivesoftware.smackx.search.UserSearchManager;
 import org.jivesoftware.smackx.xdata.Form;
+import org.jivesoftware.smackx.xdata.FormField;
+import org.jivesoftware.smackx.xdata.packet.DataForm;
 
 import com.norbcorp.hungary.hermes.client.Client;
+import com.norbcorp.hungary.hermes.client.contacts.Contact;
 import com.norbcorp.hungary.hermes.client.contacts.ContactMessage;
 import com.norbcorp.hungary.hermes.client.contacts.Conversation;
-import com.norbcorp.hungary.hermes.client.contacts.listeners.HermesRosterListener;
+import com.norbcorp.hungary.hermes.client.groupchat.GroupChatListener;
+import com.norbcorp.hungary.hermes.client.messaging.listener.HermesChatMessageListener;
 
 /**
  * 
@@ -68,51 +79,32 @@ public class XMPPConnectionManager implements Serializable{
 	private static Logger logger = Logger.getLogger(XMPPConnectionManager.class.getName());
 	
 	private final int PORT=5222;
+	
+	/**
+	 * Utility class for sending presence message to the contacts
+	 */
+	private Presence presence;
+
 
 	/**
 	 * Key-value pairs of String and Conversation entries.
+	 * 
+	 * Key is the name of the user. Valus is <i>Conversation</i> instance which contains information about the message and time when it was sent.
 	 */
 	private HashMap<String, Conversation> chatHistory = new HashMap<String, Conversation>();
 	
-	private static final int PACKET_REPLY_TIMEOUT= 100000;
+	private static final int PACKET_REPLY_TIMEOUT= 500000;
 	private XMPPTCPConnectionConfiguration.Builder config;
 	private AbstractXMPPConnection connection = null;
 	private Roster roster;
 	private Chat chat; 
 	
-	private ChatMessageListener myMessageListener = new MyMessageListener();
+	private ChatMessageListener myMessageListener = new HermesChatMessageListener(chatHistory);
 	
 	PubSubManager pbmgr;
 	
 	@Inject
 	private Client client;
-	
-	/**
-	 * Listener class for getting messages from contacts
-	 * 
-	 * @author nor
-	 */
-	class MyMessageListener implements ChatMessageListener {
-		@Override
-		public void processMessage(Chat chat, Message message) {
-			String from = message.getFrom();
-			String body = message.getBody();
-
-			if (body != null && from != null) {
-
-				// to get rid of the client name
-				from = from.split("/")[0];
-
-				if (!chatHistory.containsKey(from)) {
-					List<ContactMessage> messages = new LinkedList<ContactMessage>();
-					messages.add(new ContactMessage(from, body, Instant.now()));
-					chatHistory.put(from, new Conversation(messages));
-				} else {
-					chatHistory.get(from).getMessages().add(new ContactMessage(from, body, Instant.now()));
-				}
-			}
-		}
-	}
 	
 	public void sendMessage(String message, String userJIDAndDomain) throws Exception {
 		try {
@@ -242,8 +234,9 @@ public class XMPPConnectionManager implements Serializable{
 	                connection.setPacketReplyTimeout(10000);
 	                connection.addConnectionListener(connectionListener);
 	                connection.connect();
-	                Roster roster = Roster.getInstanceFor(connection);
-	                roster.addRosterListener(new HermesRosterListener());
+	          /*      Roster roster = Roster.getInstanceFor(connection);
+	    			roster.addRosterListener(new HermesRosterListener());*/
+	               
 	            } catch (SmackException e) {
 	                e.printStackTrace();
 	            } catch (IOException e) {
@@ -414,5 +407,73 @@ public class XMPPConnectionManager implements Serializable{
 		Roster.getInstanceFor(connection).createEntry(userJIDAndDomain, userJIDAndDomain.split("@")[0], null);
 		this.chat = ChatManager.getInstanceFor(connection).createChat(userJIDAndDomain, myMessageListener);
 		logger.info("Chat is initiated: " + (chat == null ? "No" : "Yes"));
+	}
+	
+	/**
+	 * Loads information of every member of roster. Remove domain from their names.
+	 * 
+	 * @return <i>List</i> of contacts.
+	 * @throws NotLoggedInException
+	 * @throws NotConnectedException
+	 * @throws InterruptedException
+	 */
+	public List<Contact> getContacts() throws NotLoggedInException, NotConnectedException, InterruptedException {
+		List<Contact> contacts=new LinkedList<Contact>();
+		Roster roster = getRoster();
+		roster.setDefaultSubscriptionMode(SubscriptionMode.accept_all);
+		roster.reload();
+		int id = 0;
+		for (RosterEntry entry : getRosters()) {
+			if (!(client.getUserName().equalsIgnoreCase(entry.getUser().split("@")[0]))) {
+				Contact contact = new Contact();
+				presence = roster.getPresence(entry.getUser());
+				id += 1;
+				contact.setId(id);
+				contact.setContactName(entry.getUser().split("@")[0]);
+				contact.setContactPresenceMode(presence.getMode().toString());
+				contact.setPresenceType(presence.getType().name());
+				contact.setPresenceStatus(presence.isAvailable());
+				contact.setPresenceTextStatus(presence.getStatus());
+
+				if (contacts.contains(contact)) {
+					contacts.get(contacts.indexOf(contact)).setPresenceStatus(contact.isPresenceStatus());
+				} else
+					contacts.add(contact);
+			}
+			//Set presence text of client user
+			else{
+				client.setPresenceText(roster.getPresence(entry.getUser()).getStatus());
+			}
+		}
+		return contacts;
+	}
+	
+	
+	/**
+	 * 
+	 * @param roomName
+	 * @param subject
+	 * @param listOfUsers
+	 * @throws XMPPErrorException
+	 * @throws NoResponseException
+	 * @throws NotConnectedException
+	 */
+	public void createMultiUserChatRoom(String roomName,String subject, List<String> listOfUsers) throws XMPPErrorException, NoResponseException, NotConnectedException{
+		MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(this.connection);
+		multiUserChatManager.addInvitationListener(new GroupChatListener());
+		MultiUserChat multiUserChat = multiUserChatManager.getMultiUserChat(roomName+'@'+"conference.nor-pc");
+		try {
+			logger.info("ChatRoom is successfully created: "+multiUserChat.createOrJoin(roomName+'@'+"conference.nor-pc","",new DiscussionHistory(),200000)+"");
+			multiUserChat.changeSubject(subject);
+			for(String user : listOfUsers){
+				multiUserChat.invite(user, subject);
+			}
+		} catch (NoResponseException | NotConnectedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SmackException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
