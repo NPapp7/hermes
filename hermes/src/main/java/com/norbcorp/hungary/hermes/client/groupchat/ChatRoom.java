@@ -1,7 +1,13 @@
 package com.norbcorp.hungary.hermes.client.groupchat;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.List;
+
+import org.jivesoftware.smackx.muc.MultiUserChat;
+
+import com.norbcorp.hungary.hermes.client.contacts.ContactMessage;
+import com.norbcorp.hungary.hermes.client.contacts.Conversation;
 
 public class ChatRoom implements Serializable{
 	
@@ -27,6 +33,16 @@ public class ChatRoom implements Serializable{
 	 * Subject of the room.
 	 */
 	private String subject;
+	
+	/**
+	 * Reference to multiUserChat instance.
+	 */
+	private MultiUserChat multiUserChat;
+	
+	/**
+	 * Conversation of multi user chat.
+	 */
+	private Conversation conversation;
 	
 	public String getJid() {
 		return Jid;
@@ -59,7 +75,15 @@ public class ChatRoom implements Serializable{
 	public void setSubject(String subject) {
 		this.subject = subject;
 	}
-	
+
+	public Conversation getConversation() {
+		return conversation;
+	}
+
+	public void setConversation(Conversation conversation) {
+		this.conversation = conversation;
+	}
+
 	@Override
 	public String toString() {
 		return "ChatRoom [Jid=" + Jid + ", roomName=" + roomName + ", listOfInvitees=" + listOfInvitees + ", subject="
@@ -123,7 +147,16 @@ public class ChatRoom implements Serializable{
 		chatRoom.setRoomName(roomName);
 		chatRoom.setListOfInvitees(listOfInvitees);
 		chatRoom.setSubject(subject);
+		chatRoom.setConversation(new Conversation(new LinkedList<ContactMessage>()));
 		return chatRoom;
+	}
+
+	public MultiUserChat getMultiUserChat() {
+		return multiUserChat;
+	}
+
+	public void setMultiUserChat(MultiUserChat multiUserChat) {
+		this.multiUserChat = multiUserChat;
 	}
 	
 }

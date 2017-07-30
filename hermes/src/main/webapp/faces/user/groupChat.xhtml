@@ -17,30 +17,44 @@
 </h:head> 
 <h:body> 
 		<em:userMenu></em:userMenu>
-		<h:form>
+		<h:form id="form">
+		<p:growl id="message" showDetail="true" sticky="true" />  
 		<h:panelGrid columns="2" value="#{groupChatBean.selectedContacts}" style="margin-bottom:10px" cellpadding="20" cellspacing="20">
 			<p:selectManyMenu id="selectContactForGroupChat" showCheckbox="true" filter="true" value="#{groupChatBean.selectedContacts}">
 				<f:selectItems value="#{groupChatBean.contacts}" var="contact" itemLabel="#{contact.contactName}" itemValue="#{contact}" />
 				<f:converter binding="#{contactConverter}"></f:converter>
 			</p:selectManyMenu>
-		 <h:dataTable id="availableRooms" value="#{roomManagerBean.listOfAvailableRooms}" var="room" class="table table-striped">
-	    	<h:column>
-				<f:facet name="header">#{app['groupChat.table.jid']}</f:facet>
-						${room.jid}
+		 <h:dataTable id="availableRooms" value="#{roomManagerBean.listOfAvailableRooms}" var="room" style="width:100%;" class="table table-striped" > 
+			 <h:column>
+				 <f:facet name="header">#{app['groupChat.table.jid']}</f:facet>
+				 ${room.jid}
 			</h:column>
 	    	<h:column>
-				<f:facet name="header">#{app['groupChat.table.roomName']}</f:facet>
+	    		<f:facet name="header">#{app['groupChat.table.roomName']}</f:facet>
 						${room.roomName}
 			</h:column>
 			<h:column>
-				<f:facet name="header">#{app['groupChat.table.invitees']}</f:facet>
-						${room.listOfInvitees}
+			<f:facet name="header">#{app['groupChat.table.invitees']}</f:facet>
+					${room.listOfInvitees}
 			</h:column>
 			<h:column>
-				<f:facet name="header">#{app['groupChat.table.subject']}</f:facet>
+			 	<f:facet name="header">#{app['groupChat.table.subject']}</f:facet>
 						${room.subject}
 			</h:column>
+			<h:column>
+				<f:facet name="header">#{app['groupChat.table.selectRoom']}</f:facet>
+				<h:commandButton id="selectRoomButton" class="btn btn-default" value="Select" action="#{groupChatBean.selectRoom(room)}">
+					<f:ajax execute=":form:selectRoomButton" render=":form:selectRoomButton :form:message :form:historyMessages"></f:ajax>
+				</h:commandButton>
+			</h:column>
+			<h:column rendered="false">
+				<f:facet name="header">#{app['groupChat.table.deleteRoom']}</f:facet>
+				<h:commandButton id="deleteRoomButton" class="btn btn-default" value="#{app['groupChat.table.deleteButton']}" action="#{groupChatBean.deleteRoom(room)}">
+					<f:ajax execute=":form:deleteRoomButton" render=":form:deleteRoomButton :form:message :form:historyMessages"></f:ajax>
+				</h:commandButton>
+			</h:column>
 	    </h:dataTable>
+	    
 	    <p:commandButton action="#{groupChatBean.executeSelectedContacts()}" update="display" oncomplete="PF('dlg').show()" value="#{app['groupChat.createRoom']}" icon="ui-icon-check" />
 		</h:panelGrid>
 		<p:dialog header="#{app['groupChat.createRoom']}" modal="true" showEffect="fade" widgetVar="dlg" resizable="false">
@@ -50,15 +64,37 @@
                 <h:outputText value="#{selectedContact}" />
             </p:dataList>
  
-            <h:outputText value="#{app['groupChat.roomName']}" />
+            <h:outputText class="control-label" value="#{app['groupChat.roomName']}" />
             <p:inputText value="#{groupChatBean.roomName}"></p:inputText>
             
 			<h:outputText class="control-label" value="#{app['groupChat.subject']}"/>
 			<p:inputText id="subject" class="form-control" value="#{groupChatBean.subject}"/>
             
-            <p:commandButton action="#{groupChatBean.createRoomForParticipiants()}" onclick="PF('dlg').hide()" value="Create" update="availableRooms"></p:commandButton>
+            <p:commandButton action="#{groupChatBean.createRoomForParticipiants()}" onclick="PF('dlg').hide()" value="Create" update="availableRooms message"></p:commandButton>
        	 </p:panelGrid>
     	</p:dialog>
+	
+		<h:dataTable id="historyMessages" value="#{groupChatBean.selectedRoom.conversation.messages}" var="message">
+			<h:column>
+				<f:facet name="header">Message history of <b>#{groupChatBean.selectedRoom.roomName}</b></f:facet>
+					#{message.userName}
+			</h:column>
+			<h:column>
+				<f:facet name="header">Message</f:facet>
+					#{message.message}
+			</h:column>
+			<h:column>
+				<f:facet name="header">Time</f:facet>
+					#{message.time}
+			</h:column>
+		</h:dataTable>
+		
+		<p:layoutUnit position="south">
+       		<h:inputText id="textMessage" value="#{groupChatBean.message}" />
+       		<h:commandButton value="Send" action="#{groupChatBean.sendMessage()}">
+       			<f:ajax execute=":form:textMessage" render=":form:historyMessages"></f:ajax>
+       		</h:commandButton>
+    	</p:layoutUnit>
   </h:form>
 </h:body> 
 </html>

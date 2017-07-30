@@ -17,7 +17,6 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.security.auth.callback.CallbackHandler;
-import javax.servlet.jsp.tagext.JspIdConsumer;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
@@ -47,20 +46,19 @@ import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smack.util.ByteUtils;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
-import org.jivesoftware.smackx.muc.InvitationRejectionListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.pubsub.PubSubManager;
 import org.jivesoftware.smackx.search.ReportedData.Row;
 import org.jivesoftware.smackx.search.UserSearchManager;
 import org.jivesoftware.smackx.xdata.Form;
-import org.jivesoftware.smackx.xdata.FormField;
 import org.jivesoftware.smackx.xdata.packet.DataForm;
 
 import com.norbcorp.hungary.hermes.client.Client;
 import com.norbcorp.hungary.hermes.client.contacts.Contact;
 import com.norbcorp.hungary.hermes.client.contacts.ContactMessage;
 import com.norbcorp.hungary.hermes.client.contacts.Conversation;
+import com.norbcorp.hungary.hermes.client.groupchat.ChatRoom;
 import com.norbcorp.hungary.hermes.client.groupchat.GroupChatListener;
 import com.norbcorp.hungary.hermes.client.messaging.listener.HermesChatMessageListener;
 
@@ -227,7 +225,7 @@ public class XMPPConnectionManager implements Serializable{
 		    };
 			config = XMPPTCPConnectionConfiguration.builder();
 			config.setCompressionEnabled(true).setSendPresence(true).setSecurityMode(SecurityMode.disabled).setServiceName(server).setHost(server)
-					.setPort(PORT).setUsernameAndPassword(userName, password).setDebuggerEnabled(false).build();
+					.setPort(PORT).setUsernameAndPassword(userName, password).setDebuggerEnabled(true).build();
 			this.connection = new XMPPTCPConnection(config.build());
 			
 			 try {
@@ -451,23 +449,25 @@ public class XMPPConnectionManager implements Serializable{
 	
 	/**
 	 * 
-	 * @param roomName
+	 * @param roomName name of the room
 	 * @param subject
 	 * @param listOfUsers
 	 * @throws XMPPErrorException
 	 * @throws NoResponseException
 	 * @throws NotConnectedException
 	 */
-	public void createMultiUserChatRoom(String roomName,String subject, List<String> listOfUsers) throws XMPPErrorException, NoResponseException, NotConnectedException{
+	public MultiUserChat createMultiUserChatRoom(String roomName,String subject, List<String> listOfUsers) throws XMPPErrorException, NoResponseException, NotConnectedException{
 		MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(this.connection);
 		multiUserChatManager.addInvitationListener(new GroupChatListener());
 		MultiUserChat multiUserChat = multiUserChatManager.getMultiUserChat(roomName+'@'+"conference.nor-pc");
 		try {
-			logger.info("ChatRoom is successfully created: "+multiUserChat.createOrJoin(roomName+'@'+"conference.nor-pc","",new DiscussionHistory(),200000)+"");
+			logger.info("ChatRoom is successfully created: "+multiUserChat.createOrJoin(this.client.getUserName(),"",new DiscussionHistory(),200000)+"");
 			multiUserChat.changeSubject(subject);
 			for(String user : listOfUsers){
-				multiUserChat.invite(user, subject);
+				multiUserChat.invite(user+'@'+this.client.getDomain(), "");
+				multiUserChat.grantOwnership(user+'@'+this.client.getDomain());
 			}
+			return multiUserChat;
 		} catch (NoResponseException | NotConnectedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -475,5 +475,21 @@ public class XMPPConnectionManager implements Serializable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return null;
 	}
+	
+	/**
+	 * 
+	 * @param message
+	 * @param chatRoom
+	 */
+	public void sendMessageToChatRoom(String message, ChatRoom chatRoom){
+		try {
+			chatRoom.getMultiUserChat().sendMessage(message);
+		} catch (NotConnectedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 }
