@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.norbcorp.hungary.hermes</groupId>
   <artifactId>hermes</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>war</packaging>
   <name>hermes</name>
   <description>Hermes is a XMPP client.</description>

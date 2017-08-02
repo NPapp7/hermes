@@ -17,6 +17,7 @@
 </h:head> 
 <h:body> 
 		<em:userMenu></em:userMenu>
+		<div class="container">
 		<h:form id="form">
 		<p:growl id="message" showDetail="true" sticky="true" />  
 		<h:panelGrid columns="2" value="#{groupChatBean.selectedContacts}" style="margin-bottom:10px" cellpadding="20" cellspacing="20">
@@ -74,9 +75,9 @@
        	 </p:panelGrid>
     	</p:dialog>
 	
-		<h:dataTable id="historyMessages" value="#{groupChatBean.selectedRoom.conversation.messages}" var="message">
+		<h:dataTable id="historyMessages" value="#{groupChatBean.selectedRoom.conversation.messages}" class="table" var="message">
 			<h:column>
-				<f:facet name="header">Message history of <b>#{groupChatBean.selectedRoom.roomName}</b></f:facet>
+				<f:facet name="header">Message history of <i>#{groupChatBean.selectedRoom.roomName}</i></f:facet>
 					#{message.userName}
 			</h:column>
 			<h:column>
@@ -90,11 +91,15 @@
 		</h:dataTable>
 		
 		<p:layoutUnit position="south">
-       		<h:inputText id="textMessage" value="#{groupChatBean.message}" />
-       		<h:commandButton value="Send" action="#{groupChatBean.sendMessage()}">
-       			<f:ajax execute=":form:textMessage" render=":form:historyMessages"></f:ajax>
+		<div class="col-sm-4">
+       		<h:inputText class="form-group" id="textMessage" value="#{groupChatBean.message}" />
+       		<h:commandButton  class="btn btn-default" value="Send" action="#{groupChatBean.sendMessage()}">
+       			<f:ajax execute=":form:textMessage" render=":form:message :form:historyMessages"></f:ajax>
        		</h:commandButton>
+       	</div>
     	</p:layoutUnit>
+    	<p:poll interval="5" update="historyMessages" />
   </h:form>
+  </div>
 </h:body> 
 </html>

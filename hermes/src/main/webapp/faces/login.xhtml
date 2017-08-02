@@ -28,8 +28,12 @@
 				<h:inputSecret id="password" class="form-control" value="#{client.password}" required="true" />
 			</div>
 		</div>
-		
-		<h:inputText rendered="false" id="domainName" class="form-control" value="#{client.domain}"/>
+		<div class="form-group">
+			<h:outputLabel for="domainName" class="control-label col-sm-2" value="#{app['login.domainName']}"/>
+			<div class="col-sm-10">
+				<h:inputText id="domainName" class="form-control" value="#{client.domain}" required="true"/>
+			</div>
+		</div>
 		<div class="col-sm-offset-2 col-sm-10">
 				<h:commandButton id="submitButton" class="btn btn-default" action="#{client.login()}" value="#{app['login.submit']}" />
 		</div>

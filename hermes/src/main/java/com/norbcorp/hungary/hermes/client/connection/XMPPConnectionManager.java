@@ -395,6 +395,7 @@ public class XMPPConnectionManager implements Serializable{
 	}
 	
 	/**
+	 * Create new roster entry for the given user.
 	 * 
 	 * @param userJIDAndDomain 
 	 * @throws Exception
@@ -446,6 +447,21 @@ public class XMPPConnectionManager implements Serializable{
 		return contacts;
 	}
 	
+	/**
+	 * Returns a collection of server supported multi user chat services.
+	 * 
+	 * @return a Collection of multi user services supported by the server.
+	 */
+	public List<String> getSupportedServices(){
+		MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(this.connection);
+		try {
+			return multiUserChatManager.getServiceNames();
+		} catch (NoResponseException | XMPPErrorException | NotConnectedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
 	
 	/**
 	 * 

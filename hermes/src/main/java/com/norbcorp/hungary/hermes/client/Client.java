@@ -67,7 +67,7 @@ public class Client implements Serializable{
 				logger.log(Level.INFO, "User "+userName+" logged with "+password);
 				return "successful_login";
 			} else {
-				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Password or user name is not correct."));
+				FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Password, user name or domain is not correct."));
 			}
 		} catch (NotLoggedInException nlie) {
 			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Details are not correct please try again!"));

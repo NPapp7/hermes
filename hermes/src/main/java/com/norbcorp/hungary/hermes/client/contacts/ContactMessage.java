@@ -2,6 +2,7 @@ package com.norbcorp.hungary.hermes.client.contacts;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Date;
 
 public class ContactMessage implements Serializable, Comparable<ContactMessage>{
