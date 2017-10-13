@@ -33,7 +33,6 @@ public class NoCacheFilter implements Filter {
         	httpResponse.setHeader("Pragma", "no-cache"); // HTTP 1.0.
         	httpResponse.setDateHeader("Expires", 0); // Proxies.
         }
-
         chain.doFilter(request,response);
     }
 

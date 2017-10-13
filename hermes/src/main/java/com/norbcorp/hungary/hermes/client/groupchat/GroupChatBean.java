@@ -39,6 +39,7 @@ public class GroupChatBean implements Serializable {
 	private List<Contact> selectedContacts;
 	private String roomName;
 	private String subject;
+	private String reason;
 	private ChatRoom selectedRoom;
 	
 	/**
@@ -103,7 +104,7 @@ public class GroupChatBean implements Serializable {
 
 	public void createRoomForParticipiants() throws XMPPErrorException, NoResponseException, NotConnectedException{
 		List<String> selectedNames = selectedContacts.stream().map((contact)->contact.getContactName()).collect(Collectors.toList());
-		roomManagerBean.addRoom(roomName, subject, selectedNames);
+		roomManagerBean.addRoom(roomName, subject, selectedNames, this.reason);
 	}
 	
 	public void selectRoom(ChatRoom chat){
@@ -128,5 +129,13 @@ public class GroupChatBean implements Serializable {
 			this.selectedRoom=null;
 		}
 		roomManagerBean.deleteRoom(chatRoom);
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
+	public void setReason(String reason) {
+		this.reason = reason;
 	}
 }

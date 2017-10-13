@@ -3,9 +3,7 @@ package com.norbcorp.hungary.hermes.client;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.UnknownHostException;
-import java.time.Instant;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -18,14 +16,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.SmackException.NotLoggedInException;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Message;
 
 import com.norbcorp.hungary.hermes.client.connection.XMPPConnectionManager;
-import com.norbcorp.hungary.hermes.client.contacts.ContactMessage;
-import com.norbcorp.hungary.hermes.client.contacts.Conversation;
+import com.norbcorp.hungary.hermes.client.groupchat.GroupChatInvitation;
 
 /**
  * ClientManager manages the data of connections of an xmpp network.
@@ -44,7 +39,6 @@ public class Client implements Serializable{
 	private String newPasswordAgain;
 	private String domain="nor-pc";
 	static Logger logger = LogManager.getLogManager().getLogger(Client.class.getName());
-	
 	/**
 	 * Current presence text which can be modified by the user.
 	 */
@@ -55,10 +49,7 @@ public class Client implements Serializable{
 	@Inject
 	private XMPPConnectionManager xmppConnectionManager;
 	
-/*	@PostConstruct
-	public void init(){
-		
-	}*/
+	private LinkedList<GroupChatInvitation> groupChatInvitations = new LinkedList<GroupChatInvitation>();
 	
 	public  String login() throws InterruptedException, XMPPException, SmackException, IOException{
 		try {
@@ -158,5 +149,13 @@ public class Client implements Serializable{
 
 	public void setPresenceText(String presenceText) {
 		this.presenceText = presenceText;
+	}
+
+	public LinkedList<GroupChatInvitation> getGroupChatInvitations() {
+		return groupChatInvitations;
+	}
+
+	public void setGroupChatInvitations(LinkedList<GroupChatInvitation> groupChatInvitations) {
+		this.groupChatInvitations = groupChatInvitations;
 	}
 }

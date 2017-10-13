@@ -52,18 +52,17 @@ import org.jivesoftware.smackx.pubsub.PubSubManager;
 import org.jivesoftware.smackx.search.ReportedData.Row;
 import org.jivesoftware.smackx.search.UserSearchManager;
 import org.jivesoftware.smackx.xdata.Form;
-import org.jivesoftware.smackx.xdata.packet.DataForm;
 
 import com.norbcorp.hungary.hermes.client.Client;
 import com.norbcorp.hungary.hermes.client.contacts.Contact;
 import com.norbcorp.hungary.hermes.client.contacts.ContactMessage;
 import com.norbcorp.hungary.hermes.client.contacts.Conversation;
 import com.norbcorp.hungary.hermes.client.groupchat.ChatRoom;
-import com.norbcorp.hungary.hermes.client.groupchat.GroupChatListener;
+import com.norbcorp.hungary.hermes.client.groupchat.GroupChatInvitationListener;
 import com.norbcorp.hungary.hermes.client.messaging.listener.HermesChatMessageListener;
 
 /**
- * 
+ * Class for managing connection and communication with an XMPP server.
  * 
  * @author nor
  *
@@ -466,21 +465,21 @@ public class XMPPConnectionManager implements Serializable{
 	/**
 	 * 
 	 * @param roomName name of the room
-	 * @param subject
-	 * @param listOfUsers
+	 * @param subject subject of the topic
+	 * @param listOfUsers list of invites
 	 * @throws XMPPErrorException
 	 * @throws NoResponseException
 	 * @throws NotConnectedException
 	 */
-	public MultiUserChat createMultiUserChatRoom(String roomName,String subject, List<String> listOfUsers) throws XMPPErrorException, NoResponseException, NotConnectedException{
+	public MultiUserChat createMultiUserChatRoom(String roomName,String subject, List<String> listOfUsers, String reason) throws XMPPErrorException, NoResponseException, NotConnectedException{
 		MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(this.connection);
-		multiUserChatManager.addInvitationListener(new GroupChatListener());
+		multiUserChatManager.addInvitationListener(new GroupChatInvitationListener(client.getGroupChatInvitations()));
 		MultiUserChat multiUserChat = multiUserChatManager.getMultiUserChat(roomName+'@'+"conference.nor-pc");
 		try {
 			logger.info("ChatRoom is successfully created: "+multiUserChat.createOrJoin(this.client.getUserName(),"",new DiscussionHistory(),200000)+"");
 			multiUserChat.changeSubject(subject);
 			for(String user : listOfUsers){
-				multiUserChat.invite(user+'@'+this.client.getDomain(), "");
+				multiUserChat.invite(user+'@'+this.client.getDomain(), reason);
 				multiUserChat.grantOwnership(user+'@'+this.client.getDomain());
 			}
 			return multiUserChat;

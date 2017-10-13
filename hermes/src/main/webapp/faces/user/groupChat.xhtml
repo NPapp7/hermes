@@ -55,8 +55,19 @@
 				</h:commandButton>
 			</h:column>
 	    </h:dataTable>
-	    
 	    <p:commandButton action="#{groupChatBean.executeSelectedContacts()}" update="display" oncomplete="PF('dlg').show()" value="#{app['groupChat.createRoom']}" icon="ui-icon-check" />
+	    <br/>
+	    <h:dataTable class="table" value="#{client.groupChatInvitations}" var="invitation">
+	    	<h:column>
+		    	<f:facet name="header">#{app['groupChat.inviter']}</f:facet>
+		    		${invitation.inviter}
+	    	</h:column>
+	    	<h:column>
+		    	<f:facet name="header">#{app['groupChat.reason']}</f:facet>
+		    		${invitation.reason}
+	    	</h:column>
+	    </h:dataTable>
+	 
 		</h:panelGrid>
 		<p:dialog header="#{app['groupChat.createRoom']}" modal="true" showEffect="fade" widgetVar="dlg" resizable="false">
         <p:panelGrid columns="2" id="display" >
@@ -70,6 +81,9 @@
             
 			<h:outputText class="control-label" value="#{app['groupChat.subject']}"/>
 			<p:inputText id="subject" class="form-control" value="#{groupChatBean.subject}"/>
+			
+			<h:outputText class="control-label" value="Reason"/>
+			<p:inputText id="reason" class="form-control" value="#{groupChatBean.reason}"/>
             
             <p:commandButton action="#{groupChatBean.createRoomForParticipiants()}" onclick="PF('dlg').hide()" value="Create" update="availableRooms message"></p:commandButton>
        	 </p:panelGrid>
@@ -98,7 +112,7 @@
        		</h:commandButton>
        	</div>
     	</p:layoutUnit>
-    	<p:poll interval="5" update="historyMessages" />
+    	<p:poll interval="5" update=":form:historyMessages" />
   </h:form>
   </div>
 </h:body> 

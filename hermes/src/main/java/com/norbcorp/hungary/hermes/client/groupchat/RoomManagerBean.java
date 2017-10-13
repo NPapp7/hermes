@@ -84,12 +84,12 @@ public class RoomManagerBean implements Serializable {
 	 * @param listOfInvitees is the list of user names.
 	 * @return <i>true</i> if the room was successfully created, <i>false</i> otherwise.
 	 */
-	boolean addRoom(String roomName, String subject, List<String> listOfInvitees){
+	boolean addRoom(String roomName, String subject, List<String> listOfInvitees,String reason){
 		//Create a new room with unique JiD.
 		final ChatRoom room = ChatRoom.createRoom(roomName, client.getUserName(), client.getDomain(), subject, listOfInvitees);
 		try {
 			//It uses JiD to create a room
-			room.setMultiUserChat(xmppConnectionManager.createMultiUserChatRoom(room.getJid(), room.getSubject(), listOfInvitees));
+			room.setMultiUserChat(xmppConnectionManager.createMultiUserChatRoom(room.getJid(), room.getSubject(), listOfInvitees, reason));
 			//Adding messages to the room.
 			room.getMultiUserChat().addMessageListener(new MessageListener() {
 				@Override
