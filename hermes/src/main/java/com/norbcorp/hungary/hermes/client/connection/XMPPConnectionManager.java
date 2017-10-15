@@ -21,6 +21,7 @@ import javax.security.auth.callback.CallbackHandler;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 import org.jivesoftware.smack.ConnectionListener;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.SASLAuthentication;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
@@ -97,6 +98,7 @@ public class XMPPConnectionManager implements Serializable{
 	private Chat chat; 
 	
 	private ChatMessageListener myMessageListener = new HermesChatMessageListener(chatHistory);
+	private MultiUserChatManager multiUserChatManager; 
 	
 	PubSubManager pbmgr;
 	
@@ -233,7 +235,8 @@ public class XMPPConnectionManager implements Serializable{
 	                connection.connect();
 	          /*      Roster roster = Roster.getInstanceFor(connection);
 	    			roster.addRosterListener(new HermesRosterListener());*/
-	               
+	        		multiUserChatManager = MultiUserChatManager.getInstanceFor(this.connection);
+	        		multiUserChatManager.addInvitationListener(new GroupChatInvitationListener(client.getGroupChatInvitations()));
 	            } catch (SmackException e) {
 	                e.printStackTrace();
 	            } catch (IOException e) {
@@ -463,6 +466,24 @@ public class XMPPConnectionManager implements Serializable{
 	}
 	
 	/**
+	 * Function for getting a multi user chat instance by its name from the XMPP server.
+	 * 
+	 * @param roomName of a multi user chat room.
+	 * @return an instance of <i>MultiUserChat</i> class.
+	 */
+	public MultiUserChat getMultiUserChatRoom(String roomName){
+		MultiUserChat muc = this.multiUserChatManager.getMultiUserChat(roomName+'@'+"conference."+this.client.getDomain());
+		/*try {
+			//muc.createOrJoin(roomName+'@'+"conference."+this.client.getDomain());
+		} catch (XMPPErrorException | SmackException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+		return muc;
+	}
+
+	
+	/**
 	 * 
 	 * @param roomName name of the room
 	 * @param subject subject of the topic
@@ -472,9 +493,7 @@ public class XMPPConnectionManager implements Serializable{
 	 * @throws NotConnectedException
 	 */
 	public MultiUserChat createMultiUserChatRoom(String roomName,String subject, List<String> listOfUsers, String reason) throws XMPPErrorException, NoResponseException, NotConnectedException{
-		MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(this.connection);
-		multiUserChatManager.addInvitationListener(new GroupChatInvitationListener(client.getGroupChatInvitations()));
-		MultiUserChat multiUserChat = multiUserChatManager.getMultiUserChat(roomName+'@'+"conference.nor-pc");
+		MultiUserChat multiUserChat = multiUserChatManager.getMultiUserChat(roomName+'@'+"conference."+this.client.getDomain());
 		try {
 			logger.info("ChatRoom is successfully created: "+multiUserChat.createOrJoin(this.client.getUserName(),"",new DiscussionHistory(),200000)+"");
 			multiUserChat.changeSubject(subject);

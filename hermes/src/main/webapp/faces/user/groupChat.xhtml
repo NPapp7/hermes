@@ -56,8 +56,11 @@
 			</h:column>
 	    </h:dataTable>
 	    <p:commandButton action="#{groupChatBean.executeSelectedContacts()}" update="display" oncomplete="PF('dlg').show()" value="#{app['groupChat.createRoom']}" icon="ui-icon-check" />
-	    <br/>
-	    <h:dataTable class="table" value="#{client.groupChatInvitations}" var="invitation">
+	    </h:panelGrid>
+	    <p:commandButton update="invitationTable" oncomplete="PF('invitationModalDialog').show()" value="#{app['groupChat.invitations']} (#{client.groupChatInvitations.size()})" icon="ui-icon-check" />
+	    
+	    <p:dialog header="Invitations" modal="true" showEffect="fade" widgetVar="invitationModalDialog" resizable="false">
+	    <h:dataTable id="invitationTable" class="table" value="#{client.groupChatInvitations}" var="invitation">
 	    	<h:column>
 		    	<f:facet name="header">#{app['groupChat.inviter']}</f:facet>
 		    		${invitation.inviter}
@@ -66,9 +69,18 @@
 		    	<f:facet name="header">#{app['groupChat.reason']}</f:facet>
 		    		${invitation.reason}
 	    	</h:column>
+	    	<h:column>
+		    	<f:facet name="header">#{app['groupChat.invitationRoomName']}</f:facet>
+		    		${invitation.chatRoom.room}
+	    	</h:column>
+	    	<h:column>
+		    	<f:facet name="header">#{app['groupChat.selectRoom']}</f:facet>
+				<p:commandButton id="selectInvitation" action="#{roomManagerBean.joinRoom(invitation)}" class="btn btn-default" onclick="PF('invitationModalDialog').hide()" value="#{app['groupChat.selectRoom']}"></p:commandButton>
+	    	</h:column>
 	    </h:dataTable>
+	 </p:dialog>
 	 
-		</h:panelGrid>
+
 		<p:dialog header="#{app['groupChat.createRoom']}" modal="true" showEffect="fade" widgetVar="dlg" resizable="false">
         <p:panelGrid columns="2" id="display" >
             <h:outputText value="#{app['groupChat.selectedContacts']}" />

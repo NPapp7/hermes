@@ -21,6 +21,7 @@ import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException.XMPPErrorException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.muc.InvitationRejectionListener;
+import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.UserStatusListener;
 
 import com.norbcorp.hungary.hermes.client.Client;
@@ -133,5 +134,30 @@ public class RoomManagerBean implements Serializable {
 	
 	void sendMessage(String message, ChatRoom chatRoom){
 		xmppConnectionManager.sendMessageToChatRoom(message, chatRoom);
+	}
+	
+	/**
+	 * JoinRoom method is for adding rooms to available rooms from invitations.
+	 * 
+	 * @param groupChatInvitation for which we want to create a room.
+	 */
+	public void joinRoom(GroupChatInvitation groupChatInvitation){
+		try {
+			groupChatInvitation.getChatRoom().join(client.getUserName());
+			final ChatRoom chatRoom = ChatRoom.createRoom(groupChatInvitation.getChatRoom().getRoom().split("@")[0], groupChatInvitation.getInviter(), "", groupChatInvitation.getChatRoom().getSubject(), groupChatInvitation.getChatRoom().getOccupants());
+			
+			//Create xmpp multi user chat room for this particular chat room.
+			chatRoom.setMultiUserChat(xmppConnectionManager.getMultiUserChatRoom(groupChatInvitation.getChatRoom().getRoom().split("@")[0]));
+			chatRoom.getMultiUserChat().addMessageListener(new MessageListener() {
+				@Override
+				public void processMessage(Message message) {
+					chatRoom.getConversation().getMessages().add(new ContactMessage(message.getFrom().split("/")[1], message.getBody(),Instant.now()));
+				}
+			});
+			listOfAvailableRooms.add(chatRoom);
+		} catch (NoResponseException | XMPPErrorException | NotConnectedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

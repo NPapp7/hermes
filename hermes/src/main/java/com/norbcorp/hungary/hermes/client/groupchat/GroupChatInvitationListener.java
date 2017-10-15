@@ -25,6 +25,8 @@ public class GroupChatInvitationListener implements InvitationListener {
 	public void invitationReceived(XMPPConnection conn, MultiUserChat room, String inviter, String reason,
 			String password, Message message) {
 		logger.info("Inviter: "+inviter+", reason: "+reason+", message: "+message);
-		this.groupChatInvitations.add(new GroupChatInvitation(inviter, message.getBody(),reason));
+		GroupChatInvitation groupChatInvitation = new GroupChatInvitation(inviter, message.getBody(),reason, room);
+		if(!this.groupChatInvitations.contains(groupChatInvitation))
+			this.groupChatInvitations.add(groupChatInvitation);
 	}
 }

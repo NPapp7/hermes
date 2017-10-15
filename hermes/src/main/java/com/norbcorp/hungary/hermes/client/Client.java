@@ -37,7 +37,7 @@ public class Client implements Serializable{
 	private String password;
 	private String newPassword;
 	private String newPasswordAgain;
-	private String domain="nor-pc";
+	private String domain;
 	static Logger logger = LogManager.getLogManager().getLogger(Client.class.getName());
 	/**
 	 * Current presence text which can be modified by the user.

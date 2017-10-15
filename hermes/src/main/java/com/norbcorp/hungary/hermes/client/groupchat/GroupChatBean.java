@@ -17,6 +17,7 @@ import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.SmackException.NotLoggedInException;
 import org.jivesoftware.smack.XMPPException.XMPPErrorException;
+import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.norbcorp.hungary.hermes.client.Client;
 import com.norbcorp.hungary.hermes.client.connection.XMPPConnectionManager;
@@ -25,6 +26,8 @@ import com.norbcorp.hungary.hermes.client.contacts.Contact;
 @Named
 @ViewScoped
 public class GroupChatBean implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(GroupChatBean.class.getName());
 	
