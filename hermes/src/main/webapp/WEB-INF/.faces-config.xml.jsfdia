@@ -20,4 +20,15 @@
  </PROCESS-ITEM>
  <PROCESS-ITEM NAME="rules:#faces#user#homePage.xhtml"
   PATH="/faces/user/homePage.xhtml" SHAPE="240,33,0,0" model-entity="JSFProcessGroup"/>
+ <PROCESS-ITEM NAME="rules:#faces#user#userChat.xhtml"
+  PATH="/faces/user/userChat.xhtml" SHAPE="240,257,0,0" model-entity="JSFProcessGroup"/>
+ <PROCESS-ITEM NAME="rules:#faces#user#createChatGroup.xhtml"
+  PATH="/faces/user/createChatGroup.xhtml" SHAPE="32,241,0,0" model-entity="JSFProcessGroup">
+  <PROCESS-ITEM ID="rules:#faces#user#createChatGroup.xhtml:0"
+   NAME="item" PATH="/faces/user/createChatGroup.xhtml" model-entity="JSFProcessItem">
+   <PROCESS-ITEM-OUTPUT ID="RoomSelected::#faces#user#userChat.xhtml"
+    NAME="output" PATH="/faces/user/userChat.xhtml"
+    TARGET="rules:#faces#user#userChat.xhtml" TITLE="RoomSelected" model-entity="JSFProcessItemOutput"/>
+  </PROCESS-ITEM>
+ </PROCESS-ITEM>
 </PROCESS>

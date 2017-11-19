@@ -31,4 +31,11 @@
 	      <redirect/>
 	   </navigation-case> 
 	</navigation-rule> 
+	<navigation-rule> 
+	   <from-view-id>/faces/user/createChatGroup.xhtml</from-view-id> 
+	   <navigation-case> 
+	      <from-outcome>RoomSelected</from-outcome> 
+	      <to-view-id>/faces/user/userChat.xhtml</to-view-id>
+	   </navigation-case> 
+	</navigation-rule> 
 </faces-config>

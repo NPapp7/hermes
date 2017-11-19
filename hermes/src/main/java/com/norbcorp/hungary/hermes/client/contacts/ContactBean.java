@@ -1,6 +1,7 @@
 package com.norbcorp.hungary.hermes.client.contacts;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -74,7 +75,8 @@ public class ContactBean implements Serializable {
 	private Client client;
 
 	@PostConstruct
-	public void init() throws NotLoggedInException, NotConnectedException, InterruptedException {
+	public void init() {
+		try {
 		FacesContext facesContext = FacesContext.getCurrentInstance();
 		String messageBundleName = facesContext.getApplication().getMessageBundle();
 		Locale locale = facesContext.getViewRoot().getLocale();
@@ -82,6 +84,9 @@ public class ContactBean implements Serializable {
 		
 		//Load contacts from the server
 		contacts=xmppManager.getContacts();
+		} catch(NotLoggedInException|NotConnectedException|InterruptedException exception) {
+			logger.warning(Arrays.toString(exception.getStackTrace()));
+		}
 	}
 
 	public List<Contact> getContacts() throws NotLoggedInException, NotConnectedException, InterruptedException {

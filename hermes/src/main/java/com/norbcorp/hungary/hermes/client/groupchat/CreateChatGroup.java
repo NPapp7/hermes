@@ -17,7 +17,6 @@ import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.SmackException.NotLoggedInException;
 import org.jivesoftware.smack.XMPPException.XMPPErrorException;
-import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.norbcorp.hungary.hermes.client.Client;
 import com.norbcorp.hungary.hermes.client.connection.XMPPConnectionManager;
@@ -25,11 +24,9 @@ import com.norbcorp.hungary.hermes.client.contacts.Contact;
 
 @Named
 @ViewScoped
-public class GroupChatBean implements Serializable {
-
-	private static final long serialVersionUID = 1L;
-
-	private static Logger logger = Logger.getLogger(GroupChatBean.class.getName());
+public class CreateChatGroup implements Serializable{
+	
+	private static Logger logger = Logger.getLogger(CreateChatGroup.class.getName());
 	
 	@Inject
 	private XMPPConnectionManager xmppConnectionManager;
@@ -38,17 +35,31 @@ public class GroupChatBean implements Serializable {
 	@Inject
 	private RoomManagerBean roomManagerBean;
 	
+	/**
+	 * All available Contacts from which a user can select. 
+	 */
 	private List<Contact> contacts;
-	private List<Contact> selectedContacts;
-	private String roomName;
-	private String subject;
-	private String reason;
-	private ChatRoom selectedRoom;
 	
 	/**
-	 * Message to the selected room.
+	 * Selected contacts invited to the chatRoom.
 	 */
-	private String message;
+	private List<Contact> selectedContacts;
+	
+	/**
+	 * Name of the chatRoom.
+	 */
+	private String roomName;
+	
+	/**
+	 * Subject of a chatRoom.
+	 */
+	private String subject;
+	
+	/**
+	 * It is necessary for creating a room.
+	 * Reason why the room was created.
+	 */
+	private String reason;
 	
 	@PostConstruct
 	public void init() {
@@ -59,6 +70,32 @@ public class GroupChatBean implements Serializable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Delete the specified room from the RoomManager.
+	 * Currently not supported by the server.
+	 * 
+	 * @param chatRoom which is to be deleted.
+	 */
+	public void deleteRoom(ChatRoom chatRoom){
+		if(chatRoom.equals(chatRoom)){
+			chatRoom=null;
+		}
+		roomManagerBean.deleteRoom(chatRoom);
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
+	public void setReason(String reason) {
+		this.reason = reason;
+	}
+	
+	public void createRoomForParticipiants() throws XMPPErrorException, NoResponseException, NotConnectedException{
+		List<String> selectedNames = selectedContacts.stream().map((contact)->contact.getContactName()).collect(Collectors.toList());
+		roomManagerBean.addRoom(roomName, subject, selectedNames, this.reason);
 	}
 
 	public List<Contact> getContacts() {
@@ -97,48 +134,10 @@ public class GroupChatBean implements Serializable {
 		this.subject = subject;
 	}
 	
-	public ChatRoom getSelectedRoom() {
-		return selectedRoom;
-	}
-
-	public void setSelectedRoom(ChatRoom selectedRoom) {
-		this.selectedRoom = selectedRoom;
-	}
-
-	public void createRoomForParticipiants() throws XMPPErrorException, NoResponseException, NotConnectedException{
-		List<String> selectedNames = selectedContacts.stream().map((contact)->contact.getContactName()).collect(Collectors.toList());
-		roomManagerBean.addRoom(roomName, subject, selectedNames, this.reason);
+	public String selectRoom(ChatRoom chat){
+	//	FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(chat.getJid()+" room was selected"));
+		roomManagerBean.setSelectedRoom(chat);
+		return "RoomSelected";
 	}
 	
-	public void selectRoom(ChatRoom chat){
-		FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(chat.getJid()+" room was selected"));
-		this.selectedRoom=chat;
-	}
-	
-	public String getMessage() {
-		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public void sendMessage(){
-		roomManagerBean.sendMessage(message,selectedRoom);
-	}
-	
-	public void deleteRoom(ChatRoom chatRoom){
-		if(chatRoom.equals(selectedRoom)){
-			this.selectedRoom=null;
-		}
-		roomManagerBean.deleteRoom(chatRoom);
-	}
-
-	public String getReason() {
-		return reason;
-	}
-
-	public void setReason(String reason) {
-		this.reason = reason;
-	}
 }

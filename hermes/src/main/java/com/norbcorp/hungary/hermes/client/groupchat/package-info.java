@@ -1,7 +1,6 @@
 /**
+ * Managed beans for group chat management.
  * 
- */
-/**
  * @author nor
  *
  */

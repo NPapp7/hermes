@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
@@ -13,7 +14,6 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.print.attribute.standard.Severity;
 
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.SmackException.NoResponseException;
@@ -21,8 +21,6 @@ import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException.XMPPErrorException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.muc.InvitationRejectionListener;
-import org.jivesoftware.smackx.muc.MultiUserChat;
-import org.jivesoftware.smackx.muc.UserStatusListener;
 
 import com.norbcorp.hungary.hermes.client.Client;
 import com.norbcorp.hungary.hermes.client.connection.XMPPConnectionManager;
@@ -41,6 +39,8 @@ public class RoomManagerBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
+	private static final Logger logger = Logger.getLogger(RoomManagerBean.class.getName());
+	
 	@Inject
 	private XMPPConnectionManager xmppConnectionManager;
 	@Inject
@@ -55,6 +55,12 @@ public class RoomManagerBean implements Serializable {
 	 * Rooms which are created by the current user.
 	 */
 	private List<ChatRoom> listOfAvailableRooms;
+	
+	
+	/**
+	 * Chat room which was selected by the user.
+	 */
+	private ChatRoom selectedRoom;
 	
 	@PostConstruct
 	public void init(){
@@ -73,6 +79,15 @@ public class RoomManagerBean implements Serializable {
 	
 	public List<ChatRoom> getListOfAvailableRooms() {
 		return listOfAvailableRooms;
+	}
+	
+	public ChatRoom getSelectedRoom() {
+		return selectedRoom;
+	}
+
+
+	public void setSelectedRoom(ChatRoom selectedRoom) {
+		this.selectedRoom = selectedRoom;
 	}
 
 

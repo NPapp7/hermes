@@ -1,6 +1,7 @@
 package com.norbcorp.hungary.hermes.client.messaging;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -57,8 +58,12 @@ public class MessagingBean implements Serializable {
 	private Client client;
 	
 	@PostConstruct
-	public void init() throws NotLoggedInException, NotConnectedException, InterruptedException{
+	public void init(){
+		try {
 		listOfAvailableContacts = xmppManager.getContacts();
+		} catch ( NotLoggedInException|NotConnectedException|InterruptedException exception) {
+			logger.warning(Arrays.toString(exception.getStackTrace()));
+		}
 	}
 	
 	/**
