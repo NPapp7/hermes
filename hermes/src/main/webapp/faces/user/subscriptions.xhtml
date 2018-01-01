@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:em="http://java.sun.com/jsf/composite/components"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<title>#{app['subscriptionPage.subscriptionTitle']}</title>
+	<link rel="stylesheet"
+		href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" />
+		<h:outputScript library="js" name="menu.js" />
+	<h:outputStylesheet library="css" name="bootstrap.css" />
+	<h:outputStylesheet library="css" name="bootstrap-theme.min.css" />
+	<h:outputStylesheet library="css" name="bbootstrap-theme.css" />
+</h:head>
+<h:body>
+	<em:userMenu></em:userMenu>
+	<br />
+	<br />
+		<h:form class="form-inline">
+			<div class="form-group">
+				<h:outputLabel for="nodeToSubscribe" value="#{app['subscriptionPage.subscribe']}" />
+				<h:inputText id="nodeToSubscribe" value="#{client.topicToSubscribe}" />
+				<h:commandButton value="#{app['subscriptionPage.subscribeToTheEvent']}" styleClass="btn btn-primary"
+					action="${client.subscribeToTopic()}" />
+			</div>
+		</h:form>
+		<h:form id="formSubscriptions">
+		<h:dataTable id="subscriptions"
+			value="#{connectionFactory.subscriptions}" var="subscription"
+			styleClass="table table-striped">
+			<h:column>
+				<f:facet name="header">#{app['subscriptionPage.table.eventNodeName']}</f:facet>
+				#{subscription.node}
+			</h:column>
+			<h:column>
+				<f:facet name="header">#{app['subscriptionPage.table.subscriptionId']}:</f:facet>
+				#{subscription.jid}
+			</h:column>
+			<h:column>
+				<f:facet name="header">#{app['subscriptionPage.table.namespace']}:</f:facet>
+				#{subscription.namespace}
+			</h:column>
+			<h:column>
+				<f:facet name="header">#{app['subscriptionPage.table.state']}:</f:facet>
+				#{subscription.state}
+			</h:column>
+			<h:column>
+				<h:commandButton id="unsubscribe"
+					action="#{connectionFactory.unsubscribe(subscription.node)}"
+					value="#{app['subscriptionPage.table.unsubscribe']}" styleClass="btn btn-default">
+					<f:ajax execute="formSubscriptions:unsubscribe" render="formSubscriptions:subscriptions" />
+				</h:commandButton>
+			</h:column>
+					#{connectionFactory.addListenerToLeafNode(subscription.node)}
+			</h:dataTable>
+			</h:form>
+</h:body>
+</html>

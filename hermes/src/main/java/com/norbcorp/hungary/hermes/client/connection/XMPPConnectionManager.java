@@ -21,7 +21,6 @@ import javax.security.auth.callback.CallbackHandler;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 import org.jivesoftware.smack.ConnectionListener;
-import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.SASLAuthentication;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
@@ -45,14 +44,28 @@ import org.jivesoftware.smack.sasl.SASLMechanism;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smack.util.ByteUtils;
+import org.jivesoftware.smackx.disco.packet.DiscoverItems;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
+import org.jivesoftware.smackx.pubsub.AccessModel;
+import org.jivesoftware.smackx.pubsub.ConfigureForm;
+import org.jivesoftware.smackx.pubsub.Item;
+import org.jivesoftware.smackx.pubsub.ItemPublishEvent;
+import org.jivesoftware.smackx.pubsub.LeafNode;
+import org.jivesoftware.smackx.pubsub.Node;
+import org.jivesoftware.smackx.pubsub.NodeType;
+import org.jivesoftware.smackx.pubsub.PayloadItem;
 import org.jivesoftware.smackx.pubsub.PubSubManager;
+import org.jivesoftware.smackx.pubsub.PublishModel;
+import org.jivesoftware.smackx.pubsub.SimplePayload;
+import org.jivesoftware.smackx.pubsub.Subscription;
+import org.jivesoftware.smackx.pubsub.listener.ItemEventListener;
 import org.jivesoftware.smackx.search.ReportedData.Row;
 import org.jivesoftware.smackx.search.UserSearchManager;
 import org.jivesoftware.smackx.xdata.Form;
+import org.jivesoftware.smackx.xdata.packet.DataForm;
 
 import com.norbcorp.hungary.hermes.client.Client;
 import com.norbcorp.hungary.hermes.client.contacts.Contact;
@@ -233,8 +246,21 @@ public class XMPPConnectionManager implements Serializable{
 	                connection.setPacketReplyTimeout(10000);
 	                connection.addConnectionListener(connectionListener);
 	                connection.connect();
-	          /*      Roster roster = Roster.getInstanceFor(connection);
-	    			roster.addRosterListener(new HermesRosterListener());*/
+
+					pbmgr = new PubSubManager(connection);
+				/*	try {
+						pbmgr.getDefaultConfiguration().setAccessModel(AccessModel.open);
+						pbmgr.getDefaultConfiguration().setPersistentItems(true);
+						pbmgr.getDefaultConfiguration().setPublishModel(PublishModel.open);*/
+						try {
+							getRosters();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+				/*	} catch (NoResponseException | XMPPErrorException | NotConnectedException e) {
+						e.printStackTrace();
+					}*/
 	        		multiUserChatManager = MultiUserChatManager.getInstanceFor(this.connection);
 	        		multiUserChatManager.addInvitationListener(new GroupChatInvitationListener(client.getGroupChatInvitations()));
 	            } catch (SmackException e) {
@@ -397,20 +423,6 @@ public class XMPPConnectionManager implements Serializable{
 	}
 	
 	/**
-	 * Create new roster entry for the given user.
-	 * 
-	 * @param userJIDAndDomain 
-	 * @throws Exception
-	 */
-	public void createEntry(String userJIDAndDomain) throws Exception {
-		logger.info(String.format("Creating entry for buddy '%1$s", userJIDAndDomain));
-		ChatManager.getInstanceFor(connection).addChatListener(new ChatManagerListenerImpl());
-		Roster.getInstanceFor(connection).createEntry(userJIDAndDomain, userJIDAndDomain.split("@")[0], null);
-		this.chat = ChatManager.getInstanceFor(connection).createChat(userJIDAndDomain, myMessageListener);
-		logger.info("Chat is initiated: " + (chat == null ? "No" : "Yes"));
-	}
-	
-	/**
 	 * Loads information of every member of roster. Remove domain from their names.
 	 * 
 	 * @return <i>List</i> of contacts.
@@ -523,6 +535,197 @@ public class XMPPConnectionManager implements Serializable{
 		} catch (NotConnectedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Create an event(LeafNode) to store the items. It can create nodes and
+	 * work properly. XMPP Conflict errors can be occured.
+	 * 
+	 * @throws NotConnectedException
+	 * @throws XMPPErrorException
+	 * @throws NoResponseException
+	 * 
+	 */
+	public void createNode(String nodeName) throws NoResponseException, XMPPErrorException, NotConnectedException {
+		ConfigureForm f = new ConfigureForm(DataForm.Type.submit);
+		f.setAccessModel(AccessModel.open);
+		f.setDeliverPayloads(true);
+		f.setNotifyRetract(true);
+		f.setPersistentItems(true);
+		f.setPublishModel(PublishModel.open);
+		f.setNodeType(NodeType.leaf);
+
+		if (pbmgr == null) {
+			PubSubManager mgr = new PubSubManager(connection);
+			// Using the same mgr for more than one time
+			this.pbmgr = mgr;
+		}
+		logger.info("Node name:" + nodeName);
+		FacesContext.getCurrentInstance().addMessage(null,
+				new FacesMessage(FacesMessage.SEVERITY_INFO, "Event Node created", nodeName + " was created."));
+		LeafNode n = (LeafNode) pbmgr.createNode(nodeName, f);
+
+		// It is necessary to get notifications about other publishers
+		n.addItemEventListener(new ItemEventListener<Item>() {
+			@Override
+			public void handlePublishedItems(ItemPublishEvent<Item> items) {
+				if (items != null)
+					for (Item item : items.getItems()) {
+						FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
+								"New event added", "Element name:" + item.getElementName()));
+					}
+			}
+		});
+	}
+
+	public void addListenerToLeafNode(String nodeName)
+			throws NoResponseException, XMPPErrorException, NotConnectedException {
+		Node n = pbmgr.getNode(nodeName);
+		n.addItemEventListener(new ItemEventListener<Item>() {
+
+			@Override
+			public void handlePublishedItems(ItemPublishEvent<Item> items) {
+				logger.info("Node id:" + items.getNodeId());
+				logger.info("Number of items:" + items.getItems().size());
+				for (Item item : items.getItems()) {
+					logger.info("Item name:" + item.getElementName());
+					logger.info("Item id:" + item.getId());
+				}
+
+			}
+		});
+	}
+
+	public void deleteItem(String nodeName, String itemIdToDelete)
+			throws NoResponseException, XMPPErrorException, NotConnectedException {
+		try {
+			((LeafNode) this.pbmgr.getNode(nodeName)).deleteItem(itemIdToDelete);
+		} catch (Exception e) {
+			logger.warning("The following error occured:" + e.getMessage());
+		}
+	}
+
+
+	public void sendItem(String newEvent, String nodeName, String namespace, String contentOfPayload)
+			throws NoResponseException, XMPPErrorException, NotConnectedException {
+		logger.info("The following element was sent:" + newEvent);
+		Node n = pbmgr.getNode(nodeName);
+
+		SimplePayload payload = new SimplePayload(newEvent, "pubsub:test:event", contentOfPayload);
+		PayloadItem payloadItem = new PayloadItem(newEvent, payload);
+		((LeafNode) n).publish(payloadItem);
+		logger.info("The following element was sent:" + newEvent);
+	}
+
+	public void sendItemGeolocPayload(String nodeName, String itemId, String xmlContent)
+			throws NoResponseException, XMPPErrorException, NotConnectedException {
+		Node n = pbmgr.getNode(nodeName);
+
+		((LeafNode) n).send(new PayloadItem(itemId, new SimplePayload(itemId, "pubsub:test:event", xmlContent)));
+	}
+
+	public void createLeafNode(String nodeName, String leafNodeName)
+			throws NoResponseException, XMPPErrorException, NotConnectedException {
+		Node n = pbmgr.getNode(nodeName);
+		pbmgr.createNode("/" + nodeName + "/" + leafNodeName);
+	}
+
+	public void subscribe(String topicToSubscribe)
+			throws NoResponseException, XMPPErrorException, NotConnectedException {
+		try {
+			// logger.info("Size: " + mgr.getSubscriptions().size());
+			Node n = pbmgr.getNode(topicToSubscribe);
+			n.addItemEventListener(new ItemEventListener() {
+				public void handlePublishedItems(ItemPublishEvent items) {
+					FacesContext facesContext = FacesContext.getCurrentInstance();
+					StringBuilder sb = new StringBuilder("Events:");
+					for (Item item : (List<Item>) items.getItems()) {
+						sb.append(item.getNode());
+					}
+				}
+			});
+			n.subscribe(connection.getUser());
+		} catch (NullPointerException excp) {
+			excp.printStackTrace();
+		}
+	}
+
+	public void createEntry(String userJIDAndDomain) throws Exception {
+		logger.info(String.format("Creating entry for buddy '%1$s", userJIDAndDomain));
+		ChatManager.getInstanceFor(connection).addChatListener(new ChatManagerListenerImpl());
+		Roster.getInstanceFor(connection).createEntry(userJIDAndDomain, userJIDAndDomain.split("@")[0], null);
+		this.chat = ChatManager.getInstanceFor(connection).createChat(userJIDAndDomain, myMessageListener);
+		logger.info("Chat is initiated: " + (chat == null ? "No" : "Yes"));
+	}
+
+	public List<Item> getItemWithPayload(String nodeName) {
+		try {
+			Node n = pbmgr.getNode(nodeName);
+			return ((LeafNode) n).getItems();
+		} catch (NotConnectedException nce) {
+			FacesContext facesContext = FacesContext.getCurrentInstance();
+			FacesMessage facesMessage = new FacesMessage("You are not connected to the server: " + nce.getMessage());
+			logger.warning("You are not connected to the server: " + nce.getMessage());
+			facesContext.addMessage(null, facesMessage);
+		} catch (NoResponseException nre) {
+			FacesContext facesContext = FacesContext.getCurrentInstance();
+			FacesMessage facesMessage = new FacesMessage("No Response from the server: " + nre.getMessage());
+			logger.warning("No Response from the server: " + nre.getMessage());
+			facesContext.addMessage(null, facesMessage);
+		} catch (XMPPErrorException xee) {
+			FacesContext facesContext = FacesContext.getCurrentInstance();
+			FacesMessage facesMessage = new FacesMessage("XMPP error occured: " + xee.getMessage());
+			logger.warning("XMPP error occured: " + xee.getMessage());
+			facesContext.addMessage(null, facesMessage);
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param nodeName
+	 *            The name of the subscriptions to which the items belong
+	 * @return List of items.
+	 */
+	public List<org.jivesoftware.smackx.disco.packet.DiscoverItems.Item> getItems(String nodeName) {
+		try {
+			Node n = pbmgr.getNode(nodeName);
+			DiscoverItems di = ((LeafNode) n).discoverItems();
+			for (Item item : ((LeafNode) n).getItems()) {
+				SimplePayload sp = ((PayloadItem<SimplePayload>) item).getPayload();
+				logger.info("XML version:" + sp.toXML());
+			}
+			logger.info("Discovered items:" + di.getItems().size());
+			return di.getItems();
+		} catch (NotConnectedException nce) {
+			FacesContext facesContext = FacesContext.getCurrentInstance();
+			FacesMessage facesMessage = new FacesMessage("You are not connected to the server: " + nce.getMessage());
+			logger.warning("You are not connected to the server: " + nce.getMessage());
+			facesContext.addMessage(null, facesMessage);
+		} catch (NoResponseException nre) {
+			FacesContext facesContext = FacesContext.getCurrentInstance();
+			FacesMessage facesMessage = new FacesMessage("No Response from the server: " + nre.getMessage());
+			logger.warning("No Response from the server: " + nre.getMessage());
+			facesContext.addMessage(null, facesMessage);
+		} catch (XMPPErrorException xee) {
+			FacesContext facesContext = FacesContext.getCurrentInstance();
+			FacesMessage facesMessage = new FacesMessage("XMPP error occured: " + xee.getMessage());
+			logger.warning("XMPP error occured: " + xee.getMessage());
+			facesContext.addMessage(null, facesMessage);
+		}
+		return null;
+	}
+	
+	public List<Subscription> getSubscriptions() throws NoResponseException, XMPPErrorException, NotConnectedException {
+		return pbmgr.getSubscriptions();
+	}
+
+	public void unsubscribe(String nodeName) {
+		try {
+			pbmgr.getNode(nodeName).unsubscribe(connection.getUser());
+		} catch (Exception e) {
+			e.getMessage();
 		}
 	}
 	

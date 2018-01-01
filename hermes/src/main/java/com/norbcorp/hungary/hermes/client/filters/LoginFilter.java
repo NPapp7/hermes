@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 import javax.faces.application.ViewExpiredException;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -15,7 +16,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.norbcorp.hungary.hermes.client.Client;
-
 
 public class LoginFilter implements Filter{
 	

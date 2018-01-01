@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:em="http://java.sun.com/jsf/composite/components">
+<h:head>
+	<title>#{app['publishPage.title']}</title>
+	<script src="http://maps.google.com/maps/api/js?key=AIzaSyAPJIcB2h8qj_n87h_rmlEWaYIRmZEZj5k" type="text/javascript"></script>
+		<h:outputScript library="js" name="menu.js" />
+	<h:outputStylesheet library="css" name="bootstrap.css" />
+	<h:outputStylesheet library="css" name="bootstrap-theme.min.css" />
+	<h:outputStylesheet library="css" name="bootstrap-theme.css" />
+</h:head>
+<h:body>
+	<em:userMenu></em:userMenu>
+	<br/>
+		<h:form id="addNewEvent" class="form-inline">
+		<div class="form-group">
+			<h:outputLabel for="itemID" value="#{app['publishPage.itemNodeName']}" />
+			<h:inputText id="itemID" class="form-control" value="#{geoloc.itemId}" />
+		</div>
+		<div class="form-group">
+			<h:outputLabel for="selectOneMenu" value="#{app['publishPage.selectedNodeName']}" />
+			<h:selectOneMenu id="selectOneMenu" class="form-control" value="#{geoloc.nodeName}">
+					<f:selectItems value="#{eventsBean.subscripedOptions}"/>
+			</h:selectOneMenu>
+		</div>
+		<div class="form-group">
+			<h:outputLabel for="geolocText" value="#{app['publishPage.descriptionOfEvent']}"/>
+			<h:inputText class="form-control" id="geolocText" value="#{geoloc.text}"/>
+		</div>
+		<div class="form-group">
+			<h:commandButton value="#{app['publishPage.publishItem']}" class="btn btn-primary"
+				action="#{geoloc.publishItemWithGeolocation()}" />
+		</div>
+		<br/>
+		</h:form>
+	<h:form prependId="false">
+		<h:outputText id="textToRender" value="#{app['publishPage.latitude']}: #{geoloc.lat} #{app['publishPage.longitude']}: #{geoloc.lng}; #{app['publishPage.address']}: #{geoloc.mapAddress}"/>
+			
+		<p:growl id="messages" showDetail="true" life="2000" />
+
+		<p:gmap center="47.52628629673434,21.627960205078125" id="map" zoom="15" type="ROADMAP" 
+			widgetVar="map" style="width:100%;height:500px"
+			onPointClick="handlePointClick(event);">
+
+		</p:gmap>
+		<p:remoteCommand name="onPoint" actionListener="#{geoloc.onPointSelect}"
+			update="messages textToRender" />
+		<h:inputHidden id="address" value="#{geoloc.mapAddress}">
+		</h:inputHidden>
+		<h:inputHidden id="lat" value="#{geoloc.lat}" />
+		<h:inputHidden id="lng" value="#{geoloc.lng}" />
+	</h:form>
+	<script type="text/javascript">
+			var currentMarker;
+		
+            function handlePointClick(event) {
+
+                if (navigator.geolocation)
+                {
+                    browserSupportFlag = true;
+                    var latlng = event.latLng;
+                    geocoder = new google.maps.Geocoder();
+                    geocoder.geocode({'latLng': latlng}, function(results, status)
+                    {
+                        if (status === google.maps.GeocoderStatus.OK)
+                        {
+							onPoint([{name: 'address', value:results[0].formatted_address}, {name: 'lng', value:event.latLng.lng()}, {name: 'lat', value: event.latLng.lat()}]);
+							if(currentMarker==null || currentMarker===undefined){
+					            currentMarker = new google.maps.Marker({
+					                position:new google.maps.LatLng(event.latLng.lat(), event.latLng.lng())
+					            });
+					 
+					            PF('map').addOverlay(currentMarker);
+                        	}
+                        	else
+                            {
+								var latlng = new google.maps.LatLng(event.latLng.lat(), event.latLng.lng());
+								currentMarker.setPosition(latlng);
+	                        } 
+				        //    PF('dlg').show();
+                        }
+                    });
+                }
+            }
+        </script>
+</h:body>
+</html>

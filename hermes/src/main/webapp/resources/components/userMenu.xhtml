@@ -37,6 +37,11 @@
 					<p:menuitem value="${app['menu.createGroup']}" icon="ui-icon" outcome="createChatGroup.xhtml"></p:menuitem>
 					<p:menuitem value="${app['menu.groupChat']}" icon="ui-icon" outcome="userChat.xhtml"></p:menuitem>
 				</p:submenu>
+				<p:submenu label="${app['menu.eventManagement']}" icon="ui-icon-calendar">
+					<p:menuitem value="${app['menu.subscriptions']}" icon="ui-icon-search" outcome="subscriptions.xhtml"></p:menuitem>
+					<p:menuitem value="${app['menu.publish']}" icon="ui-icon-document-b" outcome="publish.xhtml"></p:menuitem>
+					<p:menuitem value="${app['menu.createEvent']}" icon="ui-icon-plus" outcome="events.xhtml"></p:menuitem>
+				</p:submenu>
 				<f:facet name="options">
 					 	<p:commandButton value="${app['menu.logout']}" icon="ui-icon-extlink" action="#{client.logout()}"/>
 				</f:facet>

@@ -12,18 +12,22 @@ import java.util.logging.Logger;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.SmackException.NoResponseException;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.SmackException.NotLoggedInException;
+import org.jivesoftware.smack.XMPPException.XMPPErrorException;
 import org.jivesoftware.smack.XMPPException;
 
 import com.norbcorp.hungary.hermes.client.connection.XMPPConnectionManager;
 import com.norbcorp.hungary.hermes.client.groupchat.GroupChatInvitation;
 
 /**
- * ClientManager manages the data of connections of an xmpp network.
+ * Client bean manages the data of connections of an xmpp network.
  * 
  * @author norbert
  *
@@ -33,12 +37,40 @@ import com.norbcorp.hungary.hermes.client.groupchat.GroupChatInvitation;
 public class Client implements Serializable{
 
 	private static final long serialVersionUID = 1L;
+	
+	/**
+	 * Name of the logged user.
+	 */
 	private String userName;
+	
+	/**
+	 * Password of logger the user.
+	 */
 	private String password;
+	
 	private String newPassword;
 	private String newPasswordAgain;
+	
+	private String newTopicName = "";
+	private String topicToSubscribe = "";
+	private String nameOfTheNode = "";
+	private String contentOfPayLoad = "";
+	private String newNodeString = "";
+	private String chosenSubscription;
+	
+	/**
+	 * Name of the new leaf node which can be created on the HomePage.
+	 */
+	private String newNodeName="";
+	
+	private SelectItem[] subscripedOptions=new SelectItem[0];
+	
+	/**
+	 * Name of the server or domain.
+	 */
 	private String domain;
 	static Logger logger = LogManager.getLogManager().getLogger(Client.class.getName());
+	
 	/**
 	 * Current presence text which can be modified by the user.
 	 */
@@ -51,9 +83,18 @@ public class Client implements Serializable{
 	
 	private LinkedList<GroupChatInvitation> groupChatInvitations = new LinkedList<GroupChatInvitation>();
 	
-	public  String login() throws InterruptedException, XMPPException, SmackException, IOException{
+	/**
+	 * Login method logs the user in with the given domain, user name and password.
+	 * 
+	 * @return String as a navigation parameter.
+	 * @throws InterruptedException
+	 * @throws XMPPException
+	 * @throws SmackException
+	 * @throws IOException
+	 */
+	public String login() throws InterruptedException, XMPPException, SmackException, IOException{
 		try {
-			this.xmppConnectionManager.connectAndLogin(domain,userName, password);
+			this.xmppConnectionManager.connectAndLogin(domain, userName, password);
 			if(xmppConnectionManager.isAuthenticated()){
 				logger.log(Level.INFO, "User "+userName+" logged with "+password);
 				return "successful_login";
@@ -70,7 +111,6 @@ public class Client implements Serializable{
 	}
 	
 	public void changePassword(){
-		logger.log(Level.SEVERE, "New password: "+newPassword);
 		if(newPassword.equals(newPasswordAgain)){
 			xmppConnectionManager.changePassword(newPassword);
 		}
@@ -158,4 +198,91 @@ public class Client implements Serializable{
 	public void setGroupChatInvitations(LinkedList<GroupChatInvitation> groupChatInvitations) {
 		this.groupChatInvitations = groupChatInvitations;
 	}
+	
+	
+	public String getNewNodeName() {
+		return newNodeName;
+	}
+
+	public void setNewNodeName(String newNodeName) {
+		this.newNodeName = newNodeName;
+	}
+
+	public String getChosenSubscription() {
+		return chosenSubscription;
+	}
+	
+	public void setChosenSubscription(String chosenSubscription) {
+		this.chosenSubscription = chosenSubscription;
+	}
+
+
+	public String getNameOfTheNode() {
+		return nameOfTheNode;
+	}
+
+	public void setNameOfTheNode(String nameOfTheNode) {
+		this.nameOfTheNode = nameOfTheNode;
+	}
+
+	public void createTopic() throws NoResponseException, XMPPErrorException, NotConnectedException {
+		xmppConnectionManager.createNode(newTopicName);
+	}
+	
+	public void createLeafNode() throws NoResponseException, XMPPErrorException, NotConnectedException{
+		xmppConnectionManager.createNode(this.newNodeName);
+	}
+	
+	public String getNewNodeString() {
+		return newNodeString;
+	}
+
+	public void setNewNodeString(String newNodeString) {
+		this.newNodeString = newNodeString;
+	}
+
+	/**
+	 * 
+	 * @throws NoResponseException
+	 * @throws XMPPErrorException
+	 * @throws NotConnectedException
+	 */
+	public void sendItem(String nodeName, String namespace)
+			throws NoResponseException, XMPPErrorException, NotConnectedException {
+		this.xmppConnectionManager.sendItem(newNodeString, nodeName, namespace, contentOfPayLoad);
+	}
+	
+	public void sendItem() throws NoResponseException, XMPPErrorException, NotConnectedException{
+		this.xmppConnectionManager.sendItem(newNodeString,this.nameOfTheNode,"",contentOfPayLoad);
+	}
+
+	public String getTopicToSubscribe() {
+		return topicToSubscribe;
+	}
+
+	public void setTopicToSubscribe(String topicToSubscribe) {
+		this.topicToSubscribe = topicToSubscribe;
+	}
+
+	public void subscribeToTopic() throws NoResponseException, XMPPErrorException, NotConnectedException {
+		this.xmppConnectionManager.subscribe(topicToSubscribe);
+	}
+
+	public String getNewTopicName() {
+		return newTopicName;
+	}
+
+	public void setNewTopicName(String newTopicName) {
+		this.newTopicName = newTopicName;
+	}
+
+	public SelectItem[] getSubscripedOptions() {
+		return subscripedOptions;
+	}
+
+	public void setSubscripedOptions(SelectItem[] subscripedOptions) {
+		this.subscripedOptions = subscripedOptions;
+	}
+	
+	
 }
